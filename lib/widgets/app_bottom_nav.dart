@@ -32,6 +32,7 @@ class AppBottomNav extends StatelessWidget {
             Expanded(child: _buildNavItem(context, Icons.devices_rounded, 'Devices', 1, unselected)),
             Expanded(child: _buildNavItem(context, Icons.room_rounded, 'Rooms', 2, unselected)),
             Expanded(child: _buildNavItem(context, Icons.settings_rounded, 'Settings', 3, unselected)),
+            Expanded(child: _buildNavItem(context, Icons.energy_savings_leaf_rounded, 'Settings', 4, unselected)),
           ],
         ),
       ),

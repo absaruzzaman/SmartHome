@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:smart_home/screens/energy_screen.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -129,6 +130,7 @@ class _SmartHomeAppState extends State<SmartHomeApp> {
             '/rooms': (context) => const RoomsScreen(),
             '/devices': (context) => const AllDevicesScreen(),
             '/settings': (context) => const SettingsScreen(),
+            '/energy': (context) => const EnergyScreen(),
           },
 
           // real startup: go dashboard if session valid else login

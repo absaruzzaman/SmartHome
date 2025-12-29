@@ -187,6 +187,10 @@ class _DashboardScreenState extends State<DashboardScreen>
             case 3:
               Navigator.pushReplacementNamed(context, '/settings');
               break;
+            case 4:
+              Navigator.pushReplacementNamed(context, '/energy');
+              break;
+
           }
         },
         onFabPressed: () {
