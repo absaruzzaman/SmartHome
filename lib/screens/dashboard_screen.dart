@@ -220,40 +220,42 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildGreetingRow() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getGreeting(),
-              style: AppTextStyles.greetingTitle,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Welcome back, $_userName',
-              style: AppTextStyles.greetingSubtitle,
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            IconButton(
-              onPressed: _handleLogout,
-              icon: const Icon(Icons.logout),
-              color: AppColors.textSecondary,
-              tooltip: 'Logout',
-            ),
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: AppColors.primary.withOpacity(0.2),
-              child: const Icon(
-                Icons.person,
-                color: AppColors.primary,
-                size: 20,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _getGreeting(),
+                style: AppTextStyles.greetingTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                'Welcome back, $_userName',
+                style: AppTextStyles.greetingSubtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          onPressed: _handleLogout,
+          icon: const Icon(Icons.logout),
+          color: AppColors.textSecondary,
+          tooltip: 'Logout',
+        ),
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: AppColors.primary.withOpacity(0.2),
+          child: const Icon(
+            Icons.person,
+            color: AppColors.primary,
+            size: 20,
+          ),
         ),
       ],
     );
@@ -303,7 +305,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.3,
+          childAspectRatio: 1.15,
           children: [
             StatCard(
               icon: Icons.apartment_rounded,
