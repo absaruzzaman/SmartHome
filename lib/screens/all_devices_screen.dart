@@ -359,6 +359,9 @@ class _AllDevicesScreenState extends State<AllDevicesScreen> {
               Navigator.pushReplacementNamed(context, '/rooms');
               break;
             case 3:
+              Navigator.pushReplacementNamed(context, '/energy');
+              break;
+            case 4:
               Navigator.pushReplacementNamed(context, '/settings');
               break;
           }

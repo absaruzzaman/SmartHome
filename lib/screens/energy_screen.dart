@@ -17,6 +17,8 @@ class _EnergyScreenState extends State<EnergyScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  int _selectedBottomTab = 3;
+
   String _selectedPeriod = 'Today';
   final List<String> _periods = ['Today', 'Week', 'Month', 'Year'];
 
@@ -127,7 +129,7 @@ class _EnergyScreenState extends State<EnergyScreen>
       'usage': '1.9 kWh',
       'cost': '\$0.29',
       'icon': Icons.computer_rounded,
-      'color': Color(0xFF8B5CF6),
+      'color': const Color(0xFF8B5CF6),
     },
     {
       'name': 'TV',
@@ -165,6 +167,7 @@ class _EnergyScreenState extends State<EnergyScreen>
   }
 
   void _showSnackbar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -178,32 +181,36 @@ class _EnergyScreenState extends State<EnergyScreen>
   Widget build(BuildContext context) {
     final currentData = _energyData[_selectedPeriod]!;
 
+    final bg = AppColors.bgOf(context);
+    final heading = AppColors.headingOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          color: AppColors.heading,
+          color: heading,
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Energy Usage',
-          style: AppTextStyles.sectionTitle.copyWith(
+          style: AppTextStyles.sectionTitleOf(context).copyWith(
             fontSize: 20,
-            color: AppColors.heading,
+            color: heading,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.download_rounded),
-            color: AppColors.textSecondary,
+            color: secondary,
             onPressed: () => _showSnackbar('Export report (mock)'),
           ),
           IconButton(
             icon: const Icon(Icons.more_vert_rounded),
-            color: AppColors.textSecondary,
+            color: secondary,
             onPressed: () => _showSnackbar('More options (mock)'),
           ),
         ],
@@ -217,42 +224,35 @@ class _EnergyScreenState extends State<EnergyScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Period selector
-                _buildPeriodSelector(),
+                _buildPeriodSelector(context),
                 const SizedBox(height: 20),
 
-                // Total usage card
-                _buildTotalUsageCard(currentData),
+                _buildTotalUsageCard(context, currentData),
                 const SizedBox(height: 20),
 
-                // Stats grid
-                _buildStatsGrid(currentData),
+                _buildStatsGrid(context, currentData),
                 const SizedBox(height: 24),
 
-                // Chart placeholder
-                _buildChartSection(),
+                _buildChartSection(context),
                 const SizedBox(height: 24),
 
-                // Usage by room
                 Text(
                   'Usage by Room',
-                  style: AppTextStyles.sectionTitle,
+                  style: AppTextStyles.sectionTitleOf(context),
                 ),
                 const SizedBox(height: 12),
-                ..._buildRoomUsageList(),
+                ..._buildRoomUsageList(context),
                 const SizedBox(height: 24),
 
-                // Top consumers
                 Text(
                   'Top Energy Consumers',
-                  style: AppTextStyles.sectionTitle,
+                  style: AppTextStyles.sectionTitleOf(context),
                 ),
                 const SizedBox(height: 12),
-                ..._buildDeviceUsageList(),
+                ..._buildDeviceUsageList(context),
                 const SizedBox(height: 24),
 
-                // Energy saving tips
-                _buildEnergyTips(),
+                _buildEnergyTips(context),
                 const SizedBox(height: 20),
               ],
             ),
@@ -260,8 +260,10 @@ class _EnergyScreenState extends State<EnergyScreen>
         ),
       ),
       bottomNavigationBar: AppBottomNav(
-        selectedIndex: 4, // Energy tab index
+        selectedIndex: _selectedBottomTab,
         onTabSelected: (index) {
+          if (index == _selectedBottomTab) return;
+          setState(() => _selectedBottomTab = index);
           switch (index) {
             case 0:
               Navigator.pushReplacementNamed(context, '/dashboard');
@@ -273,31 +275,36 @@ class _EnergyScreenState extends State<EnergyScreen>
               Navigator.pushReplacementNamed(context, '/rooms');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/settings');
+              Navigator.pushReplacementNamed(context, '/energy');
               break;
             case 4:
-              return; // Already on Energy
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
           }
         },
         onFabPressed: () {},
       ),
-
     );
   }
 
-  Widget _buildPeriodSelector() {
+  // ----------- Widgets -----------
+
+  Widget _buildPeriodSelector(BuildContext context) {
+    final card = AppColors.cardOf(context);
+
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: card,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.shadowOf(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: AppColors.borderSoftOf(context), width: 1),
       ),
       child: Row(
         children: _periods.map((period) {
@@ -317,7 +324,9 @@ class _EnergyScreenState extends State<EnergyScreen>
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected
+                        ? Colors.white
+                        : AppColors.textSecondaryOf(context),
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -329,7 +338,7 @@ class _EnergyScreenState extends State<EnergyScreen>
     );
   }
 
-  Widget _buildTotalUsageCard(Map<String, dynamic> data) {
+  Widget _buildTotalUsageCard(BuildContext context, Map<String, dynamic> data) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -342,7 +351,7 @@ class _EnergyScreenState extends State<EnergyScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -353,7 +362,7 @@ class _EnergyScreenState extends State<EnergyScreen>
           Text(
             'Total Usage',
             style: TextStyle(
-              color: Colors.white.withValues(alpha:0.9),
+              color: Colors.white.withOpacity(0.9),
               fontSize: 14,
               fontWeight: FontWeight.w500,
               fontFamily: 'Inter',
@@ -373,7 +382,7 @@ class _EnergyScreenState extends State<EnergyScreen>
           Text(
             'Cost: ${data['cost']}',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Colors.white.withOpacity(0.9),
               fontSize: 16,
               fontWeight: FontWeight.w500,
               fontFamily: 'Inter',
@@ -383,13 +392,13 @@ class _EnergyScreenState extends State<EnergyScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.trending_down_rounded,
                   color: Colors.white,
                   size: 16,
@@ -412,11 +421,12 @@ class _EnergyScreenState extends State<EnergyScreen>
     );
   }
 
-  Widget _buildStatsGrid(Map<String, dynamic> data) {
+  Widget _buildStatsGrid(BuildContext context, Map<String, dynamic> data) {
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
+            context,
             'Peak Time',
             data['peak'],
             Icons.schedule_rounded,
@@ -426,6 +436,7 @@ class _EnergyScreenState extends State<EnergyScreen>
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
+            context,
             'Average',
             data['average'],
             Icons.speed_rounded,
@@ -437,19 +448,25 @@ class _EnergyScreenState extends State<EnergyScreen>
   }
 
   Widget _buildStatCard(
-      String label, String value, IconData icon, Color color) {
+      BuildContext context,
+      String label,
+      String value,
+      IconData icon,
+      Color color,
+      ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.shadowOf(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: AppColors.borderSoftOf(context), width: 1),
       ),
       child: Column(
         children: [
@@ -457,7 +474,7 @@ class _EnergyScreenState extends State<EnergyScreen>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 22),
@@ -465,13 +482,13 @@ class _EnergyScreenState extends State<EnergyScreen>
           const SizedBox(height: 12),
           Text(
             label,
-            style: AppTextStyles.deviceSubtitle,
+            style: AppTextStyles.deviceSubtitleOf(context),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: AppTextStyles.deviceTitle.copyWith(
+            style: AppTextStyles.deviceTitleOf(context).copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 16,
             ),
@@ -482,19 +499,20 @@ class _EnergyScreenState extends State<EnergyScreen>
     );
   }
 
-  Widget _buildChartSection() {
+  Widget _buildChartSection(BuildContext context) {
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.shadowOf(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: AppColors.borderSoftOf(context), width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -503,7 +521,7 @@ class _EnergyScreenState extends State<EnergyScreen>
           children: [
             Text(
               'Usage Trend',
-              style: AppTextStyles.sectionTitle.copyWith(fontSize: 16),
+              style: AppTextStyles.sectionTitleOf(context).copyWith(fontSize: 16),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -511,13 +529,13 @@ class _EnergyScreenState extends State<EnergyScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _buildChartBar('Mon', 0.7, AppColors.primary),
-                  _buildChartBar('Tue', 0.85, AppColors.primary),
-                  _buildChartBar('Wed', 0.6, AppColors.primary),
-                  _buildChartBar('Thu', 0.9, AppColors.primary),
-                  _buildChartBar('Fri', 0.75, AppColors.primary),
-                  _buildChartBar('Sat', 0.5, AppColors.onlineGreen),
-                  _buildChartBar('Sun', 0.45, AppColors.onlineGreen),
+                  _buildChartBar(context, 'Mon', 0.7, AppColors.primary),
+                  _buildChartBar(context, 'Tue', 0.85, AppColors.primary),
+                  _buildChartBar(context, 'Wed', 0.6, AppColors.primary),
+                  _buildChartBar(context, 'Thu', 0.9, AppColors.primary),
+                  _buildChartBar(context, 'Fri', 0.75, AppColors.primary),
+                  _buildChartBar(context, 'Sat', 0.5, AppColors.onlineGreen),
+                  _buildChartBar(context, 'Sun', 0.45, AppColors.onlineGreen),
                 ],
               ),
             ),
@@ -527,7 +545,8 @@ class _EnergyScreenState extends State<EnergyScreen>
     );
   }
 
-  Widget _buildChartBar(String label, double heightFactor, Color color) {
+  Widget _buildChartBar(
+      BuildContext context, String label, double heightFactor, Color color) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -538,7 +557,7 @@ class _EnergyScreenState extends State<EnergyScreen>
               width: double.infinity,
               height: 100 * heightFactor,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
+                color: color.withOpacity(0.2),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(6),
                 ),
@@ -550,7 +569,7 @@ class _EnergyScreenState extends State<EnergyScreen>
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: AppColors.textSecondaryOf(context),
                 fontFamily: 'Inter',
               ),
             ),
@@ -560,21 +579,24 @@ class _EnergyScreenState extends State<EnergyScreen>
     );
   }
 
-  List<Widget> _buildRoomUsageList() {
+  List<Widget> _buildRoomUsageList(BuildContext context) {
     return _roomUsage.map((room) {
+      final Color roomColor = room['color'] as Color;
+
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.cardOf(context),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: AppColors.shadowOf(context),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
+            border: Border.all(color: AppColors.borderSoftOf(context), width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -584,12 +606,12 @@ class _EnergyScreenState extends State<EnergyScreen>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: room['color'].withValues(alpha :0.1),
+                    color: roomColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     room['icon'],
-                    color: room['color'],
+                    color: roomColor,
                     size: 22,
                   ),
                 ),
@@ -600,7 +622,7 @@ class _EnergyScreenState extends State<EnergyScreen>
                     children: [
                       Text(
                         room['name'],
-                        style: AppTextStyles.deviceTitle.copyWith(
+                        style: AppTextStyles.deviceTitleOf(context).copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -608,9 +630,9 @@ class _EnergyScreenState extends State<EnergyScreen>
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
-                          value: room['percentage'] / 100,
-                          backgroundColor: AppColors.chipBg,
-                          valueColor: AlwaysStoppedAnimation(room['color']),
+                          value: (room['percentage'] as int) / 100,
+                          backgroundColor: AppColors.primarySoftOf(context),
+                          valueColor: AlwaysStoppedAnimation(roomColor),
                           minHeight: 6,
                         ),
                       ),
@@ -623,14 +645,14 @@ class _EnergyScreenState extends State<EnergyScreen>
                   children: [
                     Text(
                       room['usage'],
-                      style: AppTextStyles.deviceTitle.copyWith(
+                      style: AppTextStyles.deviceTitleOf(context).copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
                       '${room['percentage']}%',
-                      style: AppTextStyles.deviceSubtitle.copyWith(
-                        color: room['color'],
+                      style: AppTextStyles.deviceSubtitleOf(context).copyWith(
+                        color: roomColor,
                       ),
                     ),
                   ],
@@ -643,21 +665,24 @@ class _EnergyScreenState extends State<EnergyScreen>
     }).toList();
   }
 
-  List<Widget> _buildDeviceUsageList() {
+  List<Widget> _buildDeviceUsageList(BuildContext context) {
     return _deviceUsage.map((device) {
+      final Color deviceColor = device['color'] as Color;
+
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.cardOf(context),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: AppColors.shadowOf(context),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
+            border: Border.all(color: AppColors.borderSoftOf(context), width: 1),
           ),
           child: ListTile(
             contentPadding:
@@ -666,24 +691,24 @@ class _EnergyScreenState extends State<EnergyScreen>
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: device['color'].withValues(alpha:0.1),
+                color: deviceColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 device['icon'],
-                color: device['color'],
+                color: deviceColor,
                 size: 24,
               ),
             ),
             title: Text(
               device['name'],
-              style: AppTextStyles.deviceTitle.copyWith(
+              style: AppTextStyles.deviceTitleOf(context).copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             subtitle: Text(
               device['room'],
-              style: AppTextStyles.deviceSubtitle,
+              style: AppTextStyles.deviceSubtitleOf(context),
             ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -691,14 +716,14 @@ class _EnergyScreenState extends State<EnergyScreen>
               children: [
                 Text(
                   device['usage'],
-                  style: AppTextStyles.deviceTitle.copyWith(
+                  style: AppTextStyles.deviceTitleOf(context).copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   device['cost'],
-                  style: AppTextStyles.deviceSubtitle.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTextStyles.deviceSubtitleOf(context).copyWith(
+                    color: AppColors.textSecondaryOf(context),
                   ),
                 ),
               ],
@@ -709,19 +734,20 @@ class _EnergyScreenState extends State<EnergyScreen>
     }).toList();
   }
 
-  Widget _buildEnergyTips() {
+  Widget _buildEnergyTips(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.shadowOf(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: AppColors.borderSoftOf(context), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -732,7 +758,7 @@ class _EnergyScreenState extends State<EnergyScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.onlineGreen.withValues(alpha: 0.1),
+                  color: AppColors.onlineGreen.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -744,21 +770,21 @@ class _EnergyScreenState extends State<EnergyScreen>
               const SizedBox(width: 12),
               Text(
                 'Energy Saving Tips',
-                style: AppTextStyles.sectionTitle.copyWith(fontSize: 16),
+                style: AppTextStyles.sectionTitleOf(context).copyWith(fontSize: 16),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildTipItem('Turn off devices when not in use'),
-          _buildTipItem('Use energy-efficient LED bulbs'),
-          _buildTipItem('Schedule high-power devices during off-peak hours'),
-          _buildTipItem('Regular maintenance of AC and heating systems'),
+          _buildTipItem(context, 'Turn off devices when not in use'),
+          _buildTipItem(context, 'Use energy-efficient LED bulbs'),
+          _buildTipItem(context, 'Schedule high-power devices during off-peak hours'),
+          _buildTipItem(context, 'Regular maintenance of AC and heating systems'),
         ],
       ),
     );
   }
 
-  Widget _buildTipItem(String tip) {
+  Widget _buildTipItem(BuildContext context, String tip) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -773,7 +799,7 @@ class _EnergyScreenState extends State<EnergyScreen>
           Expanded(
             child: Text(
               tip,
-              style: AppTextStyles.deviceSubtitle.copyWith(
+              style: AppTextStyles.deviceSubtitleOf(context).copyWith(
                 height: 1.5,
               ),
             ),

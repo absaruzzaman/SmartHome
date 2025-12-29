@@ -8,7 +8,7 @@ import '../utils/form_validators.dart';
 import '../services/auth_service.dart';
 import '../services/session_manager.dart';
 
-/// Signup screen for the Smart Home application
+/// Signup screen for the Smart Home application (theme-sensitive)
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key, this.authClient});
 
@@ -95,7 +95,6 @@ class _SignupScreenState extends State<SignupScreen>
       if (user is Map) {
         final data = user['data'];
         final u = user['user'];
-
         name = (user['name'] ??
             (data is Map ? data['name'] : null) ??
             (u is Map ? u['name'] : null) ??
@@ -105,8 +104,8 @@ class _SignupScreenState extends State<SignupScreen>
       }
 
       await SessionManager.instance.saveUserName(name);
-      await SessionManager.instance.saveUserEmail(_emailController.text.trim().toLowerCase());
-
+      // If you have saveUserEmail in SessionManager, keep it; otherwise remove it.
+      // await SessionManager.instance.saveUserEmail(_emailController.text.trim().toLowerCase());
 
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/dashboard');
@@ -137,9 +136,17 @@ class _SignupScreenState extends State<SignupScreen>
 
   @override
   Widget build(BuildContext context) {
-    final bg = AppColors.bgOf(context);
-    final shadow = AppColors.shadowOf(context);
-    final textSecondary = AppColors.textSecondaryOf(context);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Theme-sensitive surfaces
+    final bg = cs.surface; // overall page bg
+    final cardBg = cs.surfaceContainerHighest; // card background
+    final shadowColor = Colors.black.withOpacity(isDark ? 0.25 : 0.12);
+
+    // Theme-sensitive text/icon
+    final textSecondary = cs.onSurface.withOpacity(0.65);
 
     return Scaffold(
       backgroundColor: bg,
@@ -158,13 +165,16 @@ class _SignupScreenState extends State<SignupScreen>
                     Container(
                       constraints: const BoxConstraints(maxWidth: 380),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: cs.outlineVariant.withOpacity(isDark ? 0.35 : 0.55),
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: shadow,
+                            color: shadowColor,
                             blurRadius: 20,
-                            offset: const Offset(0, 4),
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
@@ -180,7 +190,6 @@ class _SignupScreenState extends State<SignupScreen>
                                 width: 64,
                                 height: 64,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
                                   borderRadius: BorderRadius.circular(16),
                                   gradient: LinearGradient(
                                     begin: Alignment.topLeft,
@@ -217,7 +226,9 @@ class _SignupScreenState extends State<SignupScreen>
                             // Title
                             Text(
                               'Create Account',
-                              style: AppTextStyles.titleOf(context),
+                              style: AppTextStyles.titleOf(context).copyWith(
+                                color: cs.onSurface,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
@@ -225,7 +236,9 @@ class _SignupScreenState extends State<SignupScreen>
                             // Subtitle
                             Text(
                               'Sign up to get started',
-                              style: AppTextStyles.subtitleOf(context),
+                              style: AppTextStyles.subtitleOf(context).copyWith(
+                                color: textSecondary,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
@@ -285,11 +298,11 @@ class _SignupScreenState extends State<SignupScreen>
                             // Sign Up Button
                             PrimaryButton(
                               text: _isLoading ? 'Creating...' : 'Sign Up',
-                              onPressed: () {
-                                if (_isLoading) return;
-                                _handleSignUp();
-                              },
-                            ),
+                                onPressed: () {
+                                  if (_isLoading) return;
+                                  _handleSignUp();
+                                },
+                              ),
                           ],
                         ),
                       ),
@@ -302,21 +315,23 @@ class _SignupScreenState extends State<SignupScreen>
                       children: [
                         Text(
                           "Already have an account? ",
-                          style: AppTextStyles.smallLinkOf(context),
+                          style: AppTextStyles.smallLinkOf(context).copyWith(
+                            color: textSecondary,
+                          ),
                         ),
                         TextButton(
                           onPressed: _isLoading ? null : _handleBackToLogin,
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 8,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: AppColors.primary,
                           ),
                           child: Text(
                             'Sign in',
-                            style: AppTextStyles.linkOf(context),
+                            style: AppTextStyles.linkOf(context).copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       ],

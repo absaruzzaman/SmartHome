@@ -185,10 +185,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               Navigator.pushReplacementNamed(context, '/rooms');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/settings');
+              Navigator.pushReplacementNamed(context, '/energy');
               break;
             case 4:
-              Navigator.pushReplacementNamed(context, '/energy');
+              Navigator.pushReplacementNamed(context, '/settings');
               break;
 
           }

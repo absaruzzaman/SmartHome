@@ -16,7 +16,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen>
     with SingleTickerProviderStateMixin {
-  int _selectedBottomTab = 3;
+  int _selectedBottomTab = 4;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -318,6 +318,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               Navigator.pushReplacementNamed(context, '/rooms');
               break;
             case 3:
+              Navigator.pushReplacementNamed(context, '/energy');
+              break;
+            case 4:
               Navigator.pushReplacementNamed(context, '/settings');
               break;
           }

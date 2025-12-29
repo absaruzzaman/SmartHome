@@ -421,7 +421,7 @@ class _RoomsScreenState extends State<RoomsScreen>
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       bottomNavigationBar: AppBottomNav(
         selectedIndex: _selectedBottomTab,
         onTabSelected: (index) {
@@ -439,6 +439,9 @@ class _RoomsScreenState extends State<RoomsScreen>
               Navigator.pushReplacementNamed(context, '/rooms');
               break;
             case 3:
+              Navigator.pushReplacementNamed(context, '/energy');
+              break;
+            case 4:
               Navigator.pushReplacementNamed(context, '/settings');
               break;
           }

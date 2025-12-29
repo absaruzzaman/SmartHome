@@ -143,7 +143,7 @@ class _SmartHomeAppState extends State<SmartHomeApp> {
                 );
               }
               final ok = snapshot.data == true;
-              return ok ? const DashboardScreen() : const DashboardScreen();//const LoginScreen();
+              return ok ? const DashboardScreen() : const LoginScreen();
             },
           ),
         );
