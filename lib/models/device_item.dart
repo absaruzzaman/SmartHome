@@ -1,61 +1,63 @@
 import 'package:flutter/material.dart';
 
-/// Model for a smart home device
-class DeviceItem {
-  final String name;
-  final String type;
-  final DeviceStatus status;
-  final String value;
-  final IconData icon;
-  final bool isOn;
+enum DeviceStatus { online, offline, waiting, error }
 
-  const DeviceItem({
+class DeviceItem {
+  final String id;
+  String name;
+  final String type;
+  DeviceStatus status;
+  String value;
+  IconData icon;
+
+  bool isOn;
+
+  // ✅ CAPS fields
+  double brightness;     // lights
+  int speed;             // fans
+  double temperature;    // thermostat
+  String mode;           // air purifier
+
+  DeviceItem({
+    required this.id,
     required this.name,
     required this.type,
     required this.status,
     required this.value,
     required this.icon,
-    this.isOn = false,
+    required this.isOn,
+    this.brightness = 75.0,
+    this.speed = 2,
+    this.temperature = 22.0,
+    this.mode = 'auto',
   });
 
-  DeviceItem copyWith({
-    String? name,
-    String? type,
-    DeviceStatus? status,
-    String? value,
-    IconData? icon,
-    bool? isOn,
-  }) {
-    return DeviceItem(
-      name: name ?? this.name,
-      type: type ?? this.type,
-      status: status ?? this.status,
-      value: value ?? this.value,
-      icon: icon ?? this.icon,
-      isOn: isOn ?? this.isOn,
-    );
+  // ✅ Helpers (fixes your current screen error)
+  static DeviceStatus statusFromString(String s) {
+    switch (s) {
+      case 'online':
+        return DeviceStatus.online;
+      case 'offline':
+        return DeviceStatus.offline;
+      case 'waiting':
+        return DeviceStatus.waiting;
+      case 'error':
+        return DeviceStatus.error;
+      default:
+        return DeviceStatus.offline;
+    }
   }
-}
 
-/// Device status enum
-enum DeviceStatus {
-  online,
-  offline,
-  waiting,
-  error,
-}
-
-/// Model for a smart home scene
-class SceneItem {
-  final String title;
-  final String subtitle;
-  final bool isActive;
-  final IconData icon;
-
-  const SceneItem({
-    required this.title,
-    required this.subtitle,
-    required this.isActive,
-    required this.icon,
-  });
+  static String statusToString(DeviceStatus st) {
+    switch (st) {
+      case DeviceStatus.online:
+        return 'online';
+      case DeviceStatus.offline:
+        return 'offline';
+      case DeviceStatus.waiting:
+        return 'waiting';
+      case DeviceStatus.error:
+        return 'error';
+    }
+  }
 }
