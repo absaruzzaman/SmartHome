@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_text_field.dart';
@@ -76,9 +77,7 @@ class _SignupScreenState extends State<SignupScreen>
       FormValidators.validateConfirmPassword(v, _passwordController.text);
 
   Future<void> _handleSignUp() async {
-    // Hard guard against double tap
     if (_isLoading) return;
-
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -106,6 +105,8 @@ class _SignupScreenState extends State<SignupScreen>
       }
 
       await SessionManager.instance.saveUserName(name);
+      await SessionManager.instance.saveUserEmail(_emailController.text.trim().toLowerCase());
+
 
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/dashboard');
@@ -136,8 +137,12 @@ class _SignupScreenState extends State<SignupScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bg = AppColors.bgOf(context);
+    final shadow = AppColors.shadowOf(context);
+    final textSecondary = AppColors.textSecondaryOf(context);
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: bg,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -157,7 +162,7 @@ class _SignupScreenState extends State<SignupScreen>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.shadow,
+                            color: shadow,
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -212,7 +217,7 @@ class _SignupScreenState extends State<SignupScreen>
                             // Title
                             Text(
                               'Create Account',
-                              style: AppTextStyles.title,
+                              style: AppTextStyles.titleOf(context),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
@@ -220,7 +225,7 @@ class _SignupScreenState extends State<SignupScreen>
                             // Subtitle
                             Text(
                               'Sign up to get started',
-                              style: AppTextStyles.subtitle,
+                              style: AppTextStyles.subtitleOf(context),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
@@ -232,9 +237,9 @@ class _SignupScreenState extends State<SignupScreen>
                               controller: _nameController,
                               validator: _validateName,
                               keyboardType: TextInputType.name,
-                              suffixIcon: const Icon(
+                              suffixIcon: Icon(
                                 Icons.person_outline,
-                                color: AppColors.textSecondary,
+                                color: textSecondary,
                                 size: 20,
                               ),
                             ),
@@ -247,9 +252,9 @@ class _SignupScreenState extends State<SignupScreen>
                               controller: _emailController,
                               validator: _validateEmail,
                               keyboardType: TextInputType.emailAddress,
-                              suffixIcon: const Icon(
+                              suffixIcon: Icon(
                                 Icons.mail_outline,
-                                color: AppColors.textSecondary,
+                                color: textSecondary,
                                 size: 20,
                               ),
                             ),
@@ -277,7 +282,7 @@ class _SignupScreenState extends State<SignupScreen>
                             ),
                             const SizedBox(height: 24),
 
-                            // Sign Up Button (sync callback, safe for your PrimaryButton type)
+                            // Sign Up Button
                             PrimaryButton(
                               text: _isLoading ? 'Creating...' : 'Sign Up',
                               onPressed: () {
@@ -297,10 +302,10 @@ class _SignupScreenState extends State<SignupScreen>
                       children: [
                         Text(
                           "Already have an account? ",
-                          style: AppTextStyles.smallLink,
+                          style: AppTextStyles.smallLinkOf(context),
                         ),
                         TextButton(
-                          onPressed: _handleBackToLogin,
+                          onPressed: _isLoading ? null : _handleBackToLogin,
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 4,
@@ -311,7 +316,7 @@ class _SignupScreenState extends State<SignupScreen>
                           ),
                           child: Text(
                             'Sign in',
-                            style: AppTextStyles.link,
+                            style: AppTextStyles.linkOf(context),
                           ),
                         ),
                       ],

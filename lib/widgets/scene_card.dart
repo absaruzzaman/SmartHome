@@ -14,22 +14,28 @@ class SceneCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardBg = AppColors.cardOf(context);
+    final shadow = AppColors.shadowOf(context);
+    final border = AppColors.borderSoftOf(context);
+    final heading = AppColors.headingOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
+              color: shadow,
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
           border: Border.all(
-            color: scene.isActive ? AppColors.primary : Colors.transparent,
+            color: scene.isActive ? AppColors.primary : border,
             width: 1.2,
           ),
         ),
@@ -48,21 +54,28 @@ class SceneCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(scene.title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      )),
+                  Text(
+                    scene.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: heading,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(scene.subtitle,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                      )),
+                  Text(
+                    scene.subtitle,
+                    style: TextStyle(
+                      color: secondary,
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+            Icon(Icons.arrow_forward_ios, size: 14, color: secondary),
           ],
         ),
       ),

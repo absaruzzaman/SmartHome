@@ -18,14 +18,16 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shadow = AppColors.shadowOf(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.primarySoft,
+        color: backgroundColor ?? AppColors.primarySoftOf(context),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: shadow,
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

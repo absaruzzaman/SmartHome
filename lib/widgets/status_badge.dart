@@ -13,7 +13,7 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _getStatusConfig(status);
+    final config = _getStatusConfig(context, status);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -34,12 +34,12 @@ class StatusBadge extends StatelessWidget {
     );
   }
 
-  _StatusConfig _getStatusConfig(DeviceStatus status) {
+  _StatusConfig _getStatusConfig(BuildContext context, DeviceStatus status) {
     switch (status) {
       case DeviceStatus.online:
         return _StatusConfig(
           label: 'ONLINE',
-          backgroundColor: AppColors.onlineBg,
+          backgroundColor: AppColors.onlineBgOf(context),
           textColor: AppColors.onlineText,
         );
       case DeviceStatus.offline:

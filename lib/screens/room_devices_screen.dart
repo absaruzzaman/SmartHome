@@ -84,9 +84,7 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
         isOn: (m['isOn'] == true),
         brightness: (m['brightness'] is num) ? (m['brightness'] as num).toDouble() : 75.0,
         speed: (m['speed'] is num) ? (m['speed'] as num).toInt() : 2,
-        temperature: (m['temperature'] is num)
-            ? (m['temperature'] as num).toDouble()
-            : 22.0,
+        temperature: (m['temperature'] is num) ? (m['temperature'] as num).toDouble() : 22.0,
         mode: (m['mode'] ?? 'auto') as String,
       );
     })
@@ -167,6 +165,11 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
   // ------------------ Add device ------------------
 
   void _openAddDeviceDialog() {
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+    final borderSoft = AppColors.borderSoftOf(context);
+
     final nameCtrl = TextEditingController();
     String type = 'light';
     IconData icon = _iconForType(type);
@@ -177,21 +180,36 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
         return StatefulBuilder(
           builder: (_, setDialogState) {
             return AlertDialog(
-              title: const Text('Add Device'),
+              backgroundColor: card,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text('Add Device', style: TextStyle(color: heading)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: nameCtrl,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Device name',
                       hintText: 'e.g. Ceiling Light',
+                      labelStyle: TextStyle(color: secondary),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: borderSoft),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: type,
-                    decoration: const InputDecoration(labelText: 'Type'),
+                    dropdownColor: card,
+                    decoration: InputDecoration(
+                      labelText: 'Type',
+                      labelStyle: TextStyle(color: secondary),
+                    ),
                     items: const [
                       DropdownMenuItem(value: 'light', child: Text('Light')),
                       DropdownMenuItem(value: 'fan', child: Text('Fan')),
@@ -231,19 +249,21 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
                     }
 
                     setState(() {
-                      _devices.add(DeviceItem(
-                        id: _newId(),
-                        name: name,
-                        type: type,
-                        status: DeviceStatus.offline,
-                        value: 'Off',
-                        icon: icon,
-                        isOn: false,
-                        brightness: brightness,
-                        speed: speed,
-                        temperature: temperature,
-                        mode: mode,
-                      ));
+                      _devices.add(
+                        DeviceItem(
+                          id: _newId(),
+                          name: name,
+                          type: type,
+                          status: DeviceStatus.offline,
+                          value: 'Off',
+                          icon: icon,
+                          isOn: false,
+                          brightness: brightness,
+                          speed: speed,
+                          temperature: temperature,
+                          mode: mode,
+                        ),
+                      );
                     });
 
                     await _persistDevices();
@@ -251,7 +271,7 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
                     _showSnackbar('Device added');
                     await _loadDevices();
                   },
-                  child: const Text('Add'),
+                  child: const Text('Add', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -264,13 +284,17 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
   // ------------------ Rename / Delete device ------------------
 
   void _renameDevice(DeviceItem device) {
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
+
     final ctrl = TextEditingController(text: device.name);
 
     showDialog(
       context: context,
       builder: (_) {
         return AlertDialog(
-          title: const Text('Rename Device'),
+          backgroundColor: card,
+          title: Text('Rename Device', style: TextStyle(color: heading)),
           content: TextField(controller: ctrl),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -289,7 +313,7 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
                 if (mounted) Navigator.pop(context);
                 _showSnackbar('Device renamed');
               },
-              child: const Text('Save'),
+              child: const Text('Save', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -298,18 +322,23 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
   }
 
   Future<void> _deleteDevice(DeviceItem device) async {
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
+    final errorText = AppColors.errorTextOf(context);
+
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) {
         return AlertDialog(
-          title: const Text('Delete Device?'),
+          backgroundColor: card,
+          title: Text('Delete Device?', style: TextStyle(color: heading)),
           content: Text('Delete "${device.name}" from this room?'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorText),
+              style: ElevatedButton.styleFrom(backgroundColor: errorText),
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete'),
+              child: const Text('Delete', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -324,9 +353,13 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
   }
 
   void _openDeviceMenu(DeviceItem device) {
+    final card = AppColors.cardOf(context);
+    final borderSoft = AppColors.borderSoftOf(context);
+    final errorText = AppColors.errorTextOf(context);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -340,7 +373,7 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.borderSoft,
+                  color: borderSoft,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -354,8 +387,8 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
                 },
               ),
               ListTile(
-                leading: Icon(Icons.delete_outline_rounded, color: AppColors.errorText),
-                title: Text('Delete Device', style: TextStyle(color: AppColors.errorText)),
+                leading: Icon(Icons.delete_outline_rounded, color: errorText),
+                title: Text('Delete Device', style: TextStyle(color: errorText)),
                 onTap: () {
                   Navigator.pop(context);
                   _deleteDevice(device);
@@ -387,9 +420,12 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
   }
 
   void _showOverflowMenu() {
+    final card = AppColors.cardOf(context);
+    final borderSoft = AppColors.borderSoftOf(context);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -403,7 +439,7 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.borderSoft,
+                  color: borderSoft,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -426,27 +462,32 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bg = AppColors.bgOf(context);
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: card, // ✅ not Colors.white
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.heading, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: heading, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.roomName,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.heading,
+            color: heading,
             fontFamily: 'Inter',
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert_rounded, color: AppColors.heading),
+            icon: Icon(Icons.more_vert_rounded, color: heading),
             onPressed: _showOverflowMenu,
           ),
         ],
@@ -454,7 +495,12 @@ class _RoomDevicesScreenState extends State<RoomDevicesScreen>
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: _devices.isEmpty
-            ? const Center(child: Text('No devices yet. Add one from menu.'))
+            ? Center(
+          child: Text(
+            'No devices yet. Add one from menu.',
+            style: TextStyle(color: secondary),
+          ),
+        )
             : GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,

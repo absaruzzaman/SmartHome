@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/status_chip.dart';
 import '../widgets/stat_card.dart';
-import '../widgets/quick_action_tile.dart';
 import '../widgets/device_tile.dart';
-import '../widgets/scene_card.dart';
 import '../widgets/app_bottom_nav.dart';
-import '../models/device_item.dart';
 import 'rooms_screen.dart';
 import '../services/auth_service.dart';
 import '../services/session_manager.dart';
@@ -27,77 +25,57 @@ class _DashboardScreenState extends State<DashboardScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Device states for dashboard
+  String _userName = 'User';
+
+  // We'll resolve colors inside build() using context-aware colors
   final List<Map<String, dynamic>> _dashboardDevices = [
     {
       'title': 'Living Room Light',
       'subtitle': 'Brightness: 75%',
       'icon': Icons.lightbulb_rounded,
-      'color': AppColors.warning,
+      'colorKey': 'warn',
       'isOn': true,
     },
     {
       'title': 'Thermostat',
       'subtitle': 'Temperature: 22°C',
       'icon': Icons.thermostat_rounded,
-      'color': AppColors.teal,
+      'colorKey': 'teal',
       'isOn': true,
     },
     {
       'title': 'Security Camera',
       'subtitle': 'Front Door',
       'icon': Icons.videocam_rounded,
-      'color': AppColors.purple,
+      'colorKey': 'purple',
       'isOn': false,
     },
   ];
-
-  // // Scene items
-  // final List<SceneItem> _scenes = [
-  //   SceneItem(
-  //     title: 'Morning Routine',
-  //     subtitle: '4 devices active',
-  //     isActive: true,
-  //     icon: Icons.wb_sunny_rounded,
-  //   ),
-  //   SceneItem(
-  //     title: 'Night Mode',
-  //     subtitle: '6 devices configured',
-  //     isActive: false,
-  //     icon: Icons.nightlight_rounded,
-  //   ),
-  // ];
-
-  String _userName = 'User';
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
-    // Setup entrance animation
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.05),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
 
-    // Start animation
     _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserName() async {
@@ -112,17 +90,11 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Future<void> _handleLogout() async {
     await AuthService.instance.logout();
-    // (logout already clears token+name in our AuthService; this is safe anyway)
-    await SessionManager.instance.clearToken();
+    await SessionManager.instance.clearSession();
+
 
     if (!mounted) return;
     Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   void _toggleDevice(int index, bool value) {
@@ -130,16 +102,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       _dashboardDevices[index]['isOn'] = value;
     });
   }
-
-  // void _showSnackbar(String message) {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(
-  //       content: Text(message),
-  //       behavior: SnackBarBehavior.floating,
-  //       duration: const Duration(seconds: 2),
-  //     ),
-  //   );
-  // }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -151,14 +113,35 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _navigateToRooms() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const RoomsScreen()),
+      MaterialPageRoute(builder: (_) => const RoomsScreen()),
     );
+  }
+
+  // Theme-safe “accent” colors (no dependency on AppColors.warning/purple/teal)
+  Color _accentFor(BuildContext context, String key) {
+    final scheme = Theme.of(context).colorScheme;
+    switch (key) {
+      case 'warn':
+        return scheme.tertiary; // works fine as "warning-ish"
+      case 'purple':
+        return scheme.secondary;
+      case 'teal':
+        return scheme.primary;
+      default:
+        return scheme.primary;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final heading = AppColors.headingOf(context);
+    final subText = AppColors.textSecondaryOf(context);
+
+    // Use your theme-aware status colors (from AppColors)
+    final onlineText = AppColors.onlineTextOf(context);
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.bgOf(context),
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -169,45 +152,25 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Greeting Row
-                  _buildGreetingRow(),
+                  _buildGreetingRow(context, heading, subText),
                   const SizedBox(height: 16),
 
-                  // Status Chips
-                  _buildStatusChips(),
+                  _buildStatusChips(context, onlineText),
                   const SizedBox(height: 24),
 
-                  // Overview Section
-                  _buildOverviewSection(),
+                  _buildOverviewSection(context),
                   const SizedBox(height: 24),
 
-                  // // Quick Actions Section
-                  // _buildQuickActionsSection(),
-                  // const SizedBox(height: 24),
-
-                  // Favorite Devices Section
-                  _buildFavoriteDevicesSection(),
+                  _buildFavoriteDevicesSection(context),
                   const SizedBox(height: 24),
-
-                  // // Active Scenes Section
-                  // _buildActiveScenesSection(),
-                  // const SizedBox(height: 80), // Space for bottom nav
                 ],
               ),
             ),
           ),
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () => _showSnackbar('Add (mock)'),
-      //   backgroundColor: AppColors.primary,
-      //   child: const Icon(Icons.add, color: Colors.white),
-      // ),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-
       bottomNavigationBar: AppBottomNav(
         selectedIndex: _selectedBottomTab,
-
         onTabSelected: (index) {
           if (index == _selectedBottomTab) return;
           setState(() => _selectedBottomTab = index);
@@ -225,12 +188,15 @@ class _DashboardScreenState extends State<DashboardScreen>
               Navigator.pushReplacementNamed(context, '/settings');
               break;
           }
-        }, onFabPressed: () {  },
+        },
+        onFabPressed: () {
+          // optional
+        },
       ),
     );
   }
 
-  Widget _buildGreetingRow() {
+  Widget _buildGreetingRow(BuildContext context, Color heading, Color subText) {
     return Row(
       children: [
         Expanded(
@@ -239,14 +205,14 @@ class _DashboardScreenState extends State<DashboardScreen>
             children: [
               Text(
                 _getGreeting(),
-                style: AppTextStyles.greetingTitle,
+                style: AppTextStyles.greetingTitleOf(context), // make sure AppTextStyles uses ...Of(context)
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
               Text(
                 'Welcome back, $_userName',
-                style: AppTextStyles.greetingSubtitle,
+                style: AppTextStyles.greetingSubtitleOf(context),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -257,7 +223,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         IconButton(
           onPressed: _handleLogout,
           icon: const Icon(Icons.logout),
-          color: AppColors.textSecondary,
+          color: subText,
           tooltip: 'Logout',
         ),
         CircleAvatar(
@@ -273,17 +239,17 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildStatusChips() {
+  Widget _buildStatusChips(BuildContext context, Color onlineText) {
     return Row(
       children: [
         StatusChip(
           label: 'ONLINE',
-          textColor: AppColors.onlineGreen,
+          textColor: onlineText,
           leadingIcon: Container(
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: AppColors.onlineGreen,
+              color: onlineText,
               shape: BoxShape.circle,
             ),
           ),
@@ -292,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         StatusChip(
           label: '8 Active',
           textColor: AppColors.primary,
-          leadingIcon: Icon(
+          leadingIcon: const Icon(
             Icons.flash_on,
             size: 14,
             color: AppColors.primary,
@@ -302,14 +268,13 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildOverviewSection() {
+  Widget _buildOverviewSection(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Overview',
-          style: AppTextStyles.sectionTitle,
-        ),
+        Text('Overview', style: AppTextStyles.sectionTitleOf(context)),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: 2,
@@ -321,29 +286,29 @@ class _DashboardScreenState extends State<DashboardScreen>
           children: [
             StatCard(
               icon: Icons.apartment_rounded,
-              iconColor: AppColors.primary,
-              iconBgColor: AppColors.primarySoft,
+              iconColor: scheme.primary,
+              iconBgColor: AppColors.primarySoftOf(context),
               label: 'Total Rooms',
               value: '6',
             ),
             StatCard(
               icon: Icons.memory_rounded,
-              iconColor: AppColors.purple,
-              iconBgColor: AppColors.purple.withOpacity(0.15),
+              iconColor: scheme.secondary,
+              iconBgColor: scheme.secondary.withOpacity(0.15),
               label: 'Total Devices',
               value: '12',
             ),
             StatCard(
               icon: Icons.power_rounded,
-              iconColor: AppColors.onlineGreen,
-              iconBgColor: AppColors.onlineGreen.withOpacity(0.15),
+              iconColor: AppColors.onlineTextOf(context),
+              iconBgColor: AppColors.onlineTextOf(context).withOpacity(0.15),
               label: 'Online Devices',
               value: '8',
             ),
             StatCard(
               icon: Icons.bolt_rounded,
-              iconColor: AppColors.warning,
-              iconBgColor: AppColors.warning.withOpacity(0.15),
+              iconColor: scheme.tertiary,
+              iconBgColor: scheme.tertiary.withOpacity(0.15),
               label: 'Energy Today',
               value: '24 kWh',
             ),
@@ -353,70 +318,22 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // Widget _buildQuickActionsSection() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         'Quick Actions',
-  //         style: AppTextStyles.sectionTitle,
-  //       ),
-  //       const SizedBox(height: 12),
-  //       Row(
-  //         children: [
-  //           Expanded(
-  //             flex: 2,
-  //             child: QuickActionTile(
-  //               label: 'Add Scene',
-  //               icon: Icons.add_circle_outline,
-  //               isPrimary: true,
-  //               onTap: () => _showSnackbar('Add Scene (mock)'),
-  //             ),
-  //           ),
-  //           const SizedBox(width: 12),
-  //           Expanded(
-  //             child: QuickActionTile(
-  //               label: 'Rooms',
-  //               icon: Icons.meeting_room_rounded,
-  //               onTap: _navigateToRooms,
-  //             ),
-  //           ),
-  //           const SizedBox(width: 12),
-  //           Expanded(
-  //             child: QuickActionTile(
-  //               label: 'Scenes',
-  //               icon: Icons.auto_awesome_rounded,
-  //               onTap: () => _showSnackbar('Scenes (mock)'),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ],
-  //   );
-  // }
-
-  Widget _buildFavoriteDevicesSection() {
+  Widget _buildFavoriteDevicesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Favorite Devices',
-              style: AppTextStyles.sectionTitle,
-            ),
+            Text('Favorite Devices', style: AppTextStyles.sectionTitleOf(context)),
             TextButton(
-              onPressed: () => {},
+              onPressed: () => Navigator.pushNamed(context, '/devices'),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text(
-                'See All',
-                style: AppTextStyles.smallActionLink,
-              ),
+              child: Text('See All', style: AppTextStyles.smallActionLinkOf(context)),
             ),
           ],
         ),
@@ -427,11 +344,13 @@ class _DashboardScreenState extends State<DashboardScreen>
           itemCount: _dashboardDevices.length,
           itemBuilder: (context, index) {
             final device = _dashboardDevices[index];
+            final accent = _accentFor(context, device['colorKey'] as String);
+
             return DeviceTile(
               title: device['title'],
               subtitle: device['subtitle'],
               icon: device['icon'],
-              color: device['color'],
+              color: accent,
               isOn: device['isOn'],
               onToggle: (value) => _toggleDevice(index, value),
             );
@@ -440,43 +359,4 @@ class _DashboardScreenState extends State<DashboardScreen>
       ],
     );
   }
-
-  // Widget _buildActiveScenesSection() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           Text(
-  //             'Active Scenes',
-  //             style: AppTextStyles.sectionTitle,
-  //           ),
-  //           TextButton(
-  //             onPressed: () => _showSnackbar('Manage (mock)'),
-  //             style: TextButton.styleFrom(
-  //               padding: const EdgeInsets.symmetric(horizontal: 8),
-  //               minimumSize: Size.zero,
-  //               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-  //             ),
-  //             child: Text(
-  //               'Manage',
-  //               style: AppTextStyles.smallActionLink,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //       const SizedBox(height: 12),
-  //       ...(_scenes.map((scene) {
-  //         return Padding(
-  //           padding: const EdgeInsets.only(bottom: 12),
-  //           child: SceneCard(
-  //             scene: scene,
-  //             onTap: () => _showSnackbar('${scene.title} tapped (mock)'),
-  //           ),
-  //         );
-  //       }).toList()),
-  //     ],
-  //   );
-  // }
 }

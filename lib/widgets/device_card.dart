@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../models/device_item.dart';
@@ -18,11 +19,14 @@ class DeviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardBg = AppColors.cardOf(context);
+    final shadow = AppColors.shadowOf(context);
+    final primarySoft = AppColors.primarySoftOf(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          // Haptic feedback
           HapticFeedback.lightImpact();
           onTap();
         },
@@ -30,15 +34,19 @@ class DeviceCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: cardBg,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadow,
+                color: shadow,
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
             ],
+            border: Border.all(
+              color: AppColors.borderSoftOf(context),
+              width: 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +60,7 @@ class DeviceCard extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
+                      color: primarySoft,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
@@ -62,23 +70,26 @@ class DeviceCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  // Status badge
                   StatusBadge(status: device.status),
                 ],
               ),
               const SizedBox(height: 12),
-              // Device name
+
               Text(
                 device.name,
-                style: AppTextStyles.deviceTitle,
+                style: AppTextStyles.deviceTitleOf(context).copyWith(
+                  color: AppColors.headingOf(context),
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              // Device value/state
+
               Text(
                 device.value,
-                style: AppTextStyles.deviceSubtitle,
+                style: AppTextStyles.deviceSubtitleOf(context).copyWith(
+                  color: AppColors.textSecondaryOf(context),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

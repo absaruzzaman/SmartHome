@@ -15,52 +15,57 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bg = AppColors.cardOf(context);
+    final unselected = AppColors.textSecondaryOf(context);
+
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
       notchMargin: 8,
-      color: Colors.white,
+      color: bg,
       elevation: 8,
       child: SizedBox(
-        // Give the bar a bit more height than the default (56px)
         height: kBottomNavigationBarHeight + 12,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Expanded(child: _buildNavItem(Icons.home_rounded, 'Home', 0)),
-            Expanded(child: _buildNavItem(Icons.devices_rounded, 'Devices', 1)),
-            Expanded(child: _buildNavItem(Icons.room_rounded, 'Rooms', 2)),
-            Expanded(child: _buildNavItem(Icons.settings_rounded, 'Settings', 3)),
+            Expanded(child: _buildNavItem(context, Icons.home_rounded, 'Home', 0, unselected)),
+            Expanded(child: _buildNavItem(context, Icons.devices_rounded, 'Devices', 1, unselected)),
+            Expanded(child: _buildNavItem(context, Icons.room_rounded, 'Rooms', 2, unselected)),
+            Expanded(child: _buildNavItem(context, Icons.settings_rounded, 'Settings', 3, unselected)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildNavItem(
+      BuildContext context,
+      IconData icon,
+      String label,
+      int index,
+      Color unselected,
+      ) {
     final isSelected = selectedIndex == index;
+    final color = isSelected ? AppColors.primary : unselected;
+
     return InkWell(
       onTap: () => onTabSelected(index),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        // Slightly reduce padding so the contents fit comfortably
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 22, // smaller icon reduces total height
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-            ),
+            Icon(icon, size: 22, color: color),
             const SizedBox(height: 2),
             Text(
               label,
-              overflow: TextOverflow.ellipsis, // prevent text wrapping
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                color: color,
                 fontFamily: 'Inter',
               ),
             ),

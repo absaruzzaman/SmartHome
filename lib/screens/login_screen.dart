@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../utils/form_validators.dart';
@@ -36,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen>
 
     _authClient = AuthService.instance;
 
-    // Setup entrance animation
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -64,8 +63,7 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  String? _validateEmail(String? value) =>
-      FormValidators.validateEmail(value);
+  String? _validateEmail(String? value) => FormValidators.validateEmail(value);
 
   String? _validatePassword(String? value) =>
       FormValidators.validatePassword(value);
@@ -84,6 +82,7 @@ class _LoginScreenState extends State<LoginScreen>
 
       final dynamic user = await _authClient.fetchCurrentUser();
 
+
       String name = '';
       if (user is Map) {
         final data = user['data'];
@@ -97,7 +96,8 @@ class _LoginScreenState extends State<LoginScreen>
             .trim();
       }
 
-      await SessionManager.instance.saveUserName(name);
+      await SessionManager.instance.saveUserName(name.isEmpty ? 'User' : name);
+      await SessionManager.instance.saveUserEmail(_emailController.text.trim().toLowerCase());
 
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/dashboard');
@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _handleSignUp() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SignupScreen()),
+      MaterialPageRoute(builder: (_) => const SignupScreen()),
     );
   }
 
@@ -138,8 +138,39 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    final heading = AppColors.headingOf(context);
+    final textSecondary = AppColors.textSecondaryOf(context);
+
+    final titleStyle = TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.w700,
+      fontFamily: 'Inter',
+      color: heading,
+    );
+
+    final subtitleStyle = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      fontFamily: 'Inter',
+      color: textSecondary,
+    );
+
+    final linkStyle = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      fontFamily: 'Inter',
+      color: AppColors.primary,
+    );
+
+    final smallLinkStyle = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      fontFamily: 'Inter',
+      color: textSecondary,
+    );
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.bgOf(context),
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -154,11 +185,11 @@ class _LoginScreenState extends State<LoginScreen>
                     Container(
                       constraints: const BoxConstraints(maxWidth: 380),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.cardOf(context),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.shadow,
+                            color: AppColors.shadowOf(context),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -175,7 +206,6 @@ class _LoginScreenState extends State<LoginScreen>
                                 width: 64,
                                 height: 64,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
                                   borderRadius: BorderRadius.circular(16),
                                   gradient: LinearGradient(
                                     begin: Alignment.topLeft,
@@ -186,9 +216,9 @@ class _LoginScreenState extends State<LoginScreen>
                                     ],
                                   ),
                                 ),
-                                child: const Stack(
+                                child: Stack(
                                   alignment: Alignment.center,
-                                  children: [
+                                  children: const [
                                     Icon(Icons.home_rounded,
                                         color: Colors.white, size: 32),
                                     Positioned(
@@ -205,13 +235,13 @@ class _LoginScreenState extends State<LoginScreen>
 
                             Text(
                               'Smart Home',
-                              style: AppTextStyles.title,
+                              style: titleStyle,
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Control everything, effortlessly',
-                              style: AppTextStyles.subtitle,
+                              style: subtitleStyle,
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
@@ -222,9 +252,9 @@ class _LoginScreenState extends State<LoginScreen>
                               controller: _emailController,
                               validator: _validateEmail,
                               keyboardType: TextInputType.emailAddress,
-                              suffixIcon: const Icon(
+                              suffixIcon: Icon(
                                 Icons.mail_outline,
-                                color: AppColors.textSecondary,
+                                color: textSecondary,
                                 size: 20,
                               ),
                             ),
@@ -251,16 +281,15 @@ class _LoginScreenState extends State<LoginScreen>
 
                             Center(
                               child: TextButton(
-                                onPressed: _isLoading ? null : _handleForgotPassword,
+                                onPressed:
+                                _isLoading ? null : _handleForgotPassword,
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
+                                      horizontal: 16, vertical: 8),
                                 ),
                                 child: Text(
                                   'Forgot password?',
-                                  style: AppTextStyles.link,
+                                  style: linkStyle,
                                 ),
                               ),
                             ),
@@ -273,24 +302,16 @@ class _LoginScreenState extends State<LoginScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: AppTextStyles.smallLink,
-                        ),
+                        Text("Don't have an account? ", style: smallLinkStyle),
                         TextButton(
                           onPressed: _isLoading ? null : _handleSignUp,
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 8,
-                            ),
+                                horizontal: 4, vertical: 8),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: Text(
-                            'Sign up',
-                            style: AppTextStyles.link,
-                          ),
+                          child: Text('Sign up', style: linkStyle),
                         ),
                       ],
                     ),

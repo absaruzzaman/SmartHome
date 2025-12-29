@@ -52,7 +52,7 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
         .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
 
     _animationController.forward();
@@ -84,6 +84,8 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     await _savePatch({
       'isOn': _isOn,
       'value': value,
+
+      // CAPS fields
       'brightness': _brightness,
       'speed': _speed,
       'temperature': _temperature,
@@ -120,7 +122,7 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.bgOf(context),
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -129,40 +131,40 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildTopBar(),
-                  const SizedBox(height: 24),
+                  _buildTopBar(context),
+                  const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
-                        _buildDeviceHeader(),
-                        const SizedBox(height: 24),
+                        _buildDeviceHeader(context),
+                        const SizedBox(height: 20),
 
-                        _buildPowerCard(),
-                        const SizedBox(height: 16),
+                        _buildPowerCard(context),
+                        const SizedBox(height: 14),
 
                         if (_isLight) ...[
-                          _buildBrightnessCard(),
-                          const SizedBox(height: 16),
+                          _buildBrightnessCard(context),
+                          const SizedBox(height: 14),
                         ],
 
                         if (_isFan) ...[
-                          _buildFanSpeedCard(),
-                          const SizedBox(height: 16),
+                          _buildFanSpeedCard(context),
+                          const SizedBox(height: 14),
                         ],
 
                         if (_isThermostat) ...[
-                          _buildThermostatCard(),
-                          const SizedBox(height: 16),
+                          _buildThermostatCard(context),
+                          const SizedBox(height: 14),
                         ],
 
                         if (_isAirPurifier) ...[
-                          _buildAirPurifierCard(),
-                          const SizedBox(height: 16),
+                          _buildAirPurifierCard(context),
+                          const SizedBox(height: 14),
                         ],
 
-                        _buildStatusChip(),
-                        const SizedBox(height: 16),
+                        _buildStatusChip(context),
+                        const SizedBox(height: 14),
 
                         const InfoCard(
                           message: 'Device state is saved locally (SharedPreferences).',
@@ -181,14 +183,17 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.heading, size: 20),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppColors.headingOf(context),
+              size: 20,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -196,25 +201,25 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _buildDeviceHeader() {
+  Widget _buildDeviceHeader(BuildContext context) {
     return Column(
       children: [
         Container(
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: AppColors.primarySoft.withOpacity(0.6),
+            color: AppColors.primarySoftOf(context).withOpacity(0.6),
             borderRadius: BorderRadius.circular(22),
           ),
           child: Icon(widget.device.icon, size: 40, color: AppColors.primary),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Text(
           widget.device.name,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: AppColors.heading,
+            color: AppColors.headingOf(context),
             fontFamily: 'Inter',
           ),
           textAlign: TextAlign.center,
@@ -222,9 +227,9 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
         const SizedBox(height: 6),
         Text(
           widget.device.type,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
-            color: AppColors.textSecondary,
+            color: AppColors.textSecondaryOf(context),
             fontFamily: 'Inter',
           ),
         ),
@@ -232,51 +237,65 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _buildPowerCard() {
+  Widget _buildPowerCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primarySoft,
+        color: AppColors.primarySoftOf(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: AppColors.shadow, blurRadius: 18, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: AppColors.shadowOf(context),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
         children: [
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-              Text(
-                'Power',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.heading,
-                  fontFamily: 'Inter',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Power',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.headingOf(context),
+                    fontFamily: 'Inter',
+                  ),
                 ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Tap to turn on or off',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  fontFamily: 'Inter',
+                const SizedBox(height: 4),
+                Text(
+                  'Tap to turn on or off',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondaryOf(context),
+                    fontFamily: 'Inter',
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
-          Switch.adaptive(value: _isOn, onChanged: _togglePower, activeColor: AppColors.primary),
+          Switch.adaptive(
+            value: _isOn,
+            onChanged: _togglePower,
+            activeColor: AppColors.primary,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBrightnessCard() {
+  Widget _buildBrightnessCard(BuildContext context) {
     return _card(
+      context,
       title: 'Brightness',
-      trailing: Text('${_brightness.round()}%',
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary)),
+      trailing: Text(
+        '${_brightness.round()}%',
+        style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary),
+      ),
       child: Slider(
         value: _brightness,
         min: 0,
@@ -286,11 +305,14 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _buildFanSpeedCard() {
+  Widget _buildFanSpeedCard(BuildContext context) {
     return _card(
+      context,
       title: 'Fan Speed',
-      trailing: Text('$_speed',
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary)),
+      trailing: Text(
+        '$_speed',
+        style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary),
+      ),
       child: Row(
         children: [
           IconButton(
@@ -315,11 +337,14 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _buildThermostatCard() {
+  Widget _buildThermostatCard(BuildContext context) {
     return _card(
+      context,
       title: 'Temperature',
-      trailing: Text('${_temperature.toStringAsFixed(1)}°C',
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary)),
+      trailing: Text(
+        '${_temperature.toStringAsFixed(1)}°C',
+        style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary),
+      ),
       child: Slider(
         value: _temperature,
         min: 16,
@@ -329,11 +354,14 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _buildAirPurifierCard() {
+  Widget _buildAirPurifierCard(BuildContext context) {
     return _card(
+      context,
       title: 'Mode',
-      trailing: Text(_mode.toUpperCase(),
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary)),
+      trailing: Text(
+        _mode.toUpperCase(),
+        style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary),
+      ),
       child: DropdownButtonFormField<String>(
         value: _mode,
         items: const [
@@ -346,33 +374,41 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _buildStatusChip() {
+  Widget _buildStatusChip(BuildContext context) {
+    // for now: show ONLINE if device isOn (you can later tie to device.status)
+    final bg = AppColors.onlineBgOf(context);
+    final fg = AppColors.onlineTextOf(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.onlineBg,
+        color: bg,
         borderRadius: BorderRadius.circular(999),
         boxShadow: [
-          BoxShadow(color: AppColors.shadow, blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: AppColors.shadowOf(context),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
             width: 8,
             height: 8,
             child: DecoratedBox(
-              decoration: BoxDecoration(color: AppColors.onlineText, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
             ),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Text(
             'ONLINE',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              color: AppColors.onlineText,
+              color: fg,
               fontFamily: 'Inter',
               letterSpacing: 0.5,
             ),
@@ -382,18 +418,23 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
     );
   }
 
-  Widget _card({
-    required String title,
-    required Widget child,
-    Widget? trailing,
-  }) {
+  Widget _card(
+      BuildContext context, {
+        required String title,
+        required Widget child,
+        Widget? trailing,
+      }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.cardOf(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: AppColors.shadow, blurRadius: 18, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: AppColors.shadowOf(context),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -401,13 +442,15 @@ class _DeviceControlScreenState extends State<DeviceControlScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.heading,
-                    fontFamily: 'Inter',
-                  )),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.headingOf(context),
+                  fontFamily: 'Inter',
+                ),
+              ),
               if (trailing != null) trailing,
             ],
           ),

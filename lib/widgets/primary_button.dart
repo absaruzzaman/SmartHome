@@ -17,6 +17,8 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shadow = AppColors.shadowOf(context);
+
     return Container(
       width: double.infinity,
       height: 54,
@@ -24,7 +26,7 @@ class PrimaryButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: shadow,
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -43,17 +45,17 @@ class PrimaryButton extends StatelessWidget {
         ),
         child: isLoading
             ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        )
             : Text(
-                text,
-                style: AppTextStyles.button,
-              ),
+          text,
+          style: AppTextStyles.buttonOf(context).copyWith(color: Colors.white),
+        ),
       ),
     );
   }

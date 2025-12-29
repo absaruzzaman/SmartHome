@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-/// Quick action tile widget for dashboard
+/// Quick action tile widget for dashboard (Dark-mode safe)
 class QuickActionTile extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -18,6 +18,10 @@ class QuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = AppColors.cardOf(context);
+    final shadow = AppColors.shadowOf(context);
+    final heading = AppColors.headingOf(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -26,11 +30,11 @@ class QuickActionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           decoration: BoxDecoration(
-            color: isPrimary ? AppColors.primary : AppColors.card,
+            color: isPrimary ? AppColors.primary : cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadow,
+                color: shadow,
                 blurRadius: 18,
                 offset: const Offset(0, 4),
               ),
@@ -50,7 +54,7 @@ class QuickActionTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: isPrimary ? Colors.white : AppColors.heading,
+                  color: isPrimary ? Colors.white : heading,
                   fontFamily: 'Inter',
                 ),
               ),

@@ -14,10 +14,13 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final soft = AppColors.primarySoftOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primarySoft.withOpacity(0.5),
+        color: soft.withOpacity(0.6),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -41,10 +44,10 @@ class InfoCard extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.normal,
-              color: AppColors.textSecondary,
+              color: secondary,
               fontFamily: 'Inter',
               height: 1.5,
             ),

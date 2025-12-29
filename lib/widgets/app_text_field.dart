@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-/// Reusable text field widget for the Smart Home login screen
 class AppTextField extends StatefulWidget {
   final String label;
   final String hint;
@@ -30,7 +29,7 @@ class AppTextField extends StatefulWidget {
 }
 
 class _AppTextFieldState extends State<AppTextField> {
-  bool _isObscured = true;
+  late bool _isObscured;
 
   @override
   void initState() {
@@ -40,16 +39,15 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final textSecondary = AppColors.textSecondaryOf(context);
+    final bg = AppColors.cardOf(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label
-        Text(
-          widget.label,
-          style: AppTextStyles.fieldLabel,
-        ),
+        Text(widget.label, style: AppTextStyles.fieldLabelOf(context)),
         const SizedBox(height: 8),
-        // Text Field
+
         TextFormField(
           controller: widget.controller,
           validator: widget.validator,
@@ -57,41 +55,37 @@ class _AppTextFieldState extends State<AppTextField> {
           keyboardType: widget.keyboardType,
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: AppTextStyles.subtitle.copyWith(
-              color: AppColors.textSecondary.withOpacity(0.5),
+            hintStyle: AppTextStyles.subtitleOf(context).copyWith(
+              color: textSecondary.withOpacity(0.5),
             ),
             filled: true,
-            fillColor: AppColors.fieldBg,
+            fillColor: bg,
             contentPadding: const EdgeInsets.symmetric(
               vertical: 16,
               horizontal: 14,
             ),
             suffixIcon: widget.canToggleObscure
                 ? IconButton(
-                    icon: Icon(
-                      _isObscured ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textSecondary,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isObscured = !_isObscured;
-                      });
-                    },
-                  )
+              icon: Icon(
+                _isObscured ? Icons.visibility_off : Icons.visibility,
+                color: textSecondary,
+                size: 20,
+              ),
+              onPressed: () {
+                setState(() => _isObscured = !_isObscured);
+              },
+            )
                 : widget.suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: AppColors.fieldBorder,
-                width: 1,
+              borderSide: BorderSide(
+                color: AppColors.borderSoftOf(context),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: AppColors.fieldBorder,
-                width: 1,
+              borderSide: BorderSide(
+                color: AppColors.borderSoftOf(context),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -105,7 +99,6 @@ class _AppTextFieldState extends State<AppTextField> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
                 color: Colors.red.shade400,
-                width: 1,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(

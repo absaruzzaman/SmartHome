@@ -13,7 +13,8 @@ class RoomsScreen extends StatefulWidget {
   State<RoomsScreen> createState() => _RoomsScreenState();
 }
 
-class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStateMixin {
+class _RoomsScreenState extends State<RoomsScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedBottomTab = 2;
 
   late final AnimationController _animationController;
@@ -85,7 +86,6 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
     final loaded = await RoomStorage.loadRooms();
 
     if (loaded.isEmpty) {
-      // ✅ IMPORTANT: type is List<Map<String, dynamic>>
       final List<Map<String, dynamic>> defaults = <Map<String, dynamic>>[
         RoomStorage.makeRoom(
           id: IdGen.room(),
@@ -131,6 +131,12 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
   // ---------------- Add Room ----------------
 
   void _openAddRoomDialog() {
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+    final borderSoft = AppColors.borderSoftOf(context);
+    final primarySoft = AppColors.primarySoftOf(context);
+
     _roomNameCtrl.clear();
     _selectedRoomIcon = Icons.home_rounded;
 
@@ -140,17 +146,30 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
+              backgroundColor: card,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Text('Add New Room', style: TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(
+                'Add New Room',
+                style: TextStyle(fontWeight: FontWeight.bold, color: heading),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: _roomNameCtrl,
                     textInputAction: TextInputAction.done,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Room name',
                       hintText: 'e.g. Dining Room',
+                      labelStyle: TextStyle(color: secondary),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: borderSoft),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -158,7 +177,7 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Choose icon',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 12, color: secondary),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -172,18 +191,16 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: selected
-                                ? AppColors.primary.withAlpha((0.15 * 255).round())
-                                : Colors.grey.shade100,
+                            color: selected ? primarySoft : card,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: selected ? AppColors.primary : Colors.transparent,
+                              color: selected ? AppColors.primary : borderSoft,
                               width: 1.2,
                             ),
                           ),
                           child: Icon(
                             icon,
-                            color: selected ? AppColors.primary : Colors.grey.shade700,
+                            color: selected ? AppColors.primary : secondary,
                           ),
                         ),
                       );
@@ -192,7 +209,10 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                 ],
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancel')),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text('Cancel'),
+                ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -240,9 +260,13 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
   // ---------------- Rename / Delete Room ----------------
 
   void _openRoomMenu(int roomIndex) {
+    final card = AppColors.cardOf(context);
+    final borderSoft = AppColors.borderSoftOf(context);
+    final errorText = AppColors.errorTextOf(context);
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -256,7 +280,7 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.borderSoft,
+                  color: borderSoft,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -270,8 +294,8 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                 },
               ),
               ListTile(
-                leading: Icon(Icons.delete_outline_rounded, color: AppColors.errorText),
-                title: Text('Delete Room', style: TextStyle(color: AppColors.errorText)),
+                leading: Icon(Icons.delete_outline_rounded, color: errorText),
+                title: Text('Delete Room', style: TextStyle(color: errorText)),
                 onTap: () {
                   Navigator.pop(context);
                   _deleteRoom(roomIndex);
@@ -287,12 +311,15 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
 
   Future<void> _renameRoom(int roomIndex) async {
     final room = _rooms[roomIndex];
-    final ctrl = TextEditingController(text: room['name'] as String);
+    final ctrl = TextEditingController(text: (room['name'] ?? '').toString());
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
 
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Rename Room'),
+        backgroundColor: card,
+        title: Text('Rename Room', style: TextStyle(color: heading)),
         content: TextField(controller: ctrl),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
@@ -312,17 +339,22 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
   }
 
   Future<void> _deleteRoom(int roomIndex) async {
-    final name = _rooms[roomIndex]['name'] as String;
+    final errorText = AppColors.errorTextOf(context);
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
+
+    final name = (_rooms[roomIndex]['name'] ?? '').toString();
 
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Room?'),
+        backgroundColor: card,
+        title: Text('Delete Room?', style: TextStyle(color: heading)),
         content: Text('Delete "$name" and all its devices?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorText),
+            style: ElevatedButton.styleFrom(backgroundColor: errorText),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
@@ -342,7 +374,7 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
 
   void _openRoom(int index) {
     final room = _rooms[index];
-    final roomName = room['name'] as String;
+    final roomName = (room['name'] ?? 'Room').toString();
 
     Navigator.push(
       context,
@@ -352,7 +384,7 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
           roomName: roomName,
         ),
       ),
-    ).then((_) => _initRooms()); // refresh counts after coming back
+    ).then((_) => _initRooms());
   }
 
   int _deviceCount(Map<String, dynamic> room) {
@@ -372,16 +404,24 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
+    final bg = AppColors.bgOf(context);
+    final card = AppColors.cardOf(context);
+    final heading = AppColors.headingOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+    final shadow = AppColors.shadowOf(context);
+    final borderSoft = AppColors.borderSoftOf(context);
 
+    final onlineDot = AppColors.onlineText; // good for both (just a green)
+    final offlineDot = secondary;
+
+    return Scaffold(
+      backgroundColor: bg,
       floatingActionButton: FloatingActionButton(
         onPressed: _openAddRoomDialog,
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-
       bottomNavigationBar: AppBottomNav(
         selectedIndex: _selectedBottomTab,
         onTabSelected: (index) {
@@ -405,7 +445,6 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
         },
         onFabPressed: _openAddRoomDialog,
       ),
-
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -417,39 +456,46 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: card,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.shadow,
+                        color: shadow,
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
                     ],
+                    border: Border(
+                      bottom: BorderSide(color: borderSoft),
+                    ),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Text(
                         'Rooms',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.heading,
+                          color: heading,
                           fontFamily: 'Inter',
                         ),
                       ),
                     ],
                   ),
                 ),
-
                 Expanded(
                   child: _rooms.isEmpty
-                      ? const Center(child: Text('No rooms yet. Add one.'))
+                      ? Center(
+                    child: Text(
+                      'No rooms yet. Add one.',
+                      style: TextStyle(color: secondary),
+                    ),
+                  )
                       : ListView.builder(
                     padding: const EdgeInsets.all(16).copyWith(bottom: 120),
                     itemCount: _rooms.length,
                     itemBuilder: (context, i) {
                       final room = _rooms[i];
-                      final name = room['name'] as String;
+                      final name = (room['name'] ?? 'Room').toString();
                       final icon = _roomIcon(room);
                       final devices = _deviceCount(room);
                       final online = _roomOnline(room);
@@ -461,22 +507,23 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: card,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadow,
+                                color: shadow,
                                 blurRadius: 6,
                                 offset: const Offset(0, 3),
                               ),
                             ],
+                            border: Border.all(color: borderSoft),
                           ),
                           child: Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withAlpha((0.1 * 255).round()),
+                                  color: AppColors.primary.withOpacity(0.10),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(icon, color: AppColors.primary, size: 24),
@@ -488,15 +535,19 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                                   children: [
                                     Text(
                                       name,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
+                                        color: heading,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       '$devices device${devices == 1 ? '' : 's'}',
-                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: secondary,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -505,12 +556,12 @@ class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStat
                                 width: 10,
                                 height: 10,
                                 decoration: BoxDecoration(
-                                  color: online ? Colors.green : Colors.grey,
+                                  color: online ? onlineDot : offlineDot,
                                   shape: BoxShape.circle,
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                              Icon(Icons.arrow_forward_ios, size: 16, color: secondary),
                             ],
                           ),
                         ),

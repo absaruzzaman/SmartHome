@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
-import '../models/device_item.dart';
 
 /// Device tile widget for favorite devices section
 class DeviceTile extends StatelessWidget {
@@ -24,19 +24,29 @@ class DeviceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardBg = AppColors.cardOf(context);
+    final shadow = AppColors.shadowOf(context);
+    final heading = AppColors.headingOf(context);
+    final secondary = AppColors.textSecondaryOf(context);
+    final border = AppColors.borderSoftOf(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: shadow,
             blurRadius: 18,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(
+          color: border,
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
@@ -55,6 +65,7 @@ class DeviceTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
+
           // Title and subtitle
           Expanded(
             child: Column(
@@ -62,16 +73,21 @@ class DeviceTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.deviceTitle,
+                  style: AppTextStyles.deviceTitleOf(context).copyWith(
+                    color: heading,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: AppTextStyles.deviceSubtitle,
+                  style: AppTextStyles.deviceSubtitleOf(context).copyWith(
+                    color: secondary,
+                  ),
                 ),
               ],
             ),
           ),
+
           // Toggle switch
           Switch.adaptive(
             value: isOn,

@@ -21,14 +21,17 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardBg = AppColors.cardOf(context);
+    final shadow = AppColors.shadowOf(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: shadow,
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -53,16 +56,22 @@ class StatCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+
           // Label
           Text(
             label,
-            style: AppTextStyles.statLabel,
+            style: AppTextStyles.statLabelOf(context).copyWith(
+              color: AppColors.textSecondaryOf(context),
+            ),
           ),
           const SizedBox(height: 4),
+
           // Value
           Text(
             value,
-            style: AppTextStyles.statValue,
+            style: AppTextStyles.statValueOf(context).copyWith(
+              color: AppColors.headingOf(context),
+            ),
           ),
         ],
       ),
