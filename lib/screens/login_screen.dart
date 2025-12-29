@@ -5,6 +5,8 @@ import '../widgets/app_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../utils/form_validators.dart';
 import 'signup_screen.dart';
+import '../services/auth_service.dart';
+import '../services/session_manager.dart';
 
 /// Login screen for the Smart Home application
 class LoginScreen extends StatefulWidget {
@@ -20,36 +22,37 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  late final AuthClient _authClient;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
+
+    _authClient = AuthService.instance;
+
     // Setup entrance animation
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    // Start animation
     _animationController.forward();
   }
 
@@ -61,31 +64,49 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
-    return FormValidators.validateEmail(value);
-  }
+  String? _validateEmail(String? value) =>
+      FormValidators.validateEmail(value);
 
-  String? _validatePassword(String? value) {
-    return FormValidators.validatePassword(value);
-  }
+  String? _validatePassword(String? value) =>
+      FormValidators.validatePassword(value);
 
-  void _handleSignIn() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Signed in (mock)'),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(milliseconds: 500),
-        ),
+  Future<void> _handleSignIn() async {
+    if (_isLoading) return;
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authClient.login(
+        email: _emailController.text.trim().toLowerCase(),
+        password: _passwordController.text.trim(),
       );
-      debugPrint('Sign in successful (mock)');
-      
-      // Navigate to dashboard after successful sign in
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/dashboard');
-        }
-      });
+
+      final dynamic user = await _authClient.fetchCurrentUser();
+
+      String name = '';
+      if (user is Map) {
+        final data = user['data'];
+        final u = user['user'];
+
+        name = (user['name'] ??
+            (data is Map ? data['name'] : null) ??
+            (u is Map ? u['name'] : null) ??
+            '')
+            .toString()
+            .trim();
+      }
+
+      await SessionManager.instance.saveUserName(name);
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/dashboard');
+    } on AuthException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('Unable to sign in. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -96,16 +117,23 @@ class _LoginScreenState extends State<LoginScreen>
         behavior: SnackBarBehavior.floating,
       ),
     );
-    debugPrint('Forgot password tapped');
   }
 
   void _handleSignUp() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const SignupScreen(),
+      MaterialPageRoute(builder: (context) => const SignupScreen()),
+    );
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
     );
-    debugPrint('Navigate to sign up screen');
   }
 
   @override
@@ -123,7 +151,6 @@ class _LoginScreenState extends State<LoginScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Main Card
                     Container(
                       constraints: const BoxConstraints(maxWidth: 380),
                       decoration: BoxDecoration(
@@ -143,7 +170,6 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Logo Icon
                             Center(
                               child: Container(
                                 width: 64,
@@ -163,19 +189,13 @@ class _LoginScreenState extends State<LoginScreen>
                                 child: const Stack(
                                   alignment: Alignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.home_rounded,
-                                      color: Colors.white,
-                                      size: 32,
-                                    ),
+                                    Icon(Icons.home_rounded,
+                                        color: Colors.white, size: 32),
                                     Positioned(
                                       top: 14,
                                       right: 14,
-                                      child: Icon(
-                                        Icons.wifi,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
+                                      child: Icon(Icons.wifi,
+                                          color: Colors.white, size: 16),
                                     ),
                                   ],
                                 ),
@@ -183,15 +203,12 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             const SizedBox(height: 20),
 
-                            // Title
                             Text(
                               'Smart Home',
                               style: AppTextStyles.title,
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
-
-                            // Subtitle
                             Text(
                               'Control everything, effortlessly',
                               style: AppTextStyles.subtitle,
@@ -199,7 +216,6 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             const SizedBox(height: 32),
 
-                            // Email Field
                             AppTextField(
                               label: 'Email',
                               hint: 'Enter your email',
@@ -214,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             const SizedBox(height: 20),
 
-                            // Password Field
                             AppTextField(
                               label: 'Password',
                               hint: 'Enter your password',
@@ -225,17 +240,18 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             const SizedBox(height: 24),
 
-                            // Sign In Button
                             PrimaryButton(
-                              text: 'Sign In',
-                              onPressed: _handleSignIn,
+                              text: _isLoading ? 'Signing in...' : 'Sign In',
+                              onPressed: () {
+                                if (_isLoading) return;
+                                _handleSignIn();
+                              },
                             ),
                             const SizedBox(height: 16),
 
-                            // Forgot Password Link
                             Center(
                               child: TextButton(
-                                onPressed: _handleForgotPassword,
+                                onPressed: _isLoading ? null : _handleForgotPassword,
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -254,32 +270,29 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                     const SizedBox(height: 24),
 
-                    // Sign Up Link (Outside Card)
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Don't have an account? ",
-                            style: AppTextStyles.smallLink,
-                          ),
-                          TextButton(
-                            onPressed: _handleSignUp,
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 8,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: AppTextStyles.smallLink,
+                        ),
+                        TextButton(
+                          onPressed: _isLoading ? null : _handleSignUp,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 8,
                             ),
-                            child: Text(
-                              'Sign up',
-                              style: AppTextStyles.link,
-                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                        ],
-                      ),
+                          child: Text(
+                            'Sign up',
+                            style: AppTextStyles.link,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

@@ -9,6 +9,8 @@ import '../widgets/scene_card.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../models/device_item.dart';
 import 'rooms_screen.dart';
+import '../services/auth_service.dart';
+import '../services/session_manager.dart';
 
 /// Dashboard/Home screen for the Smart Home application
 class DashboardScreen extends StatefulWidget {
@@ -66,9 +68,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     ),
   ];
 
+  String _userName = 'User';
+
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     // Setup entrance animation
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -93,6 +98,25 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     // Start animation
     _animationController.forward();
+  }
+
+  Future<void> _loadUserName() async {
+    final name = await SessionManager.instance.getUserName();
+    if (!mounted) return;
+
+    setState(() {
+      final clean = (name ?? '').trim();
+      _userName = clean.isEmpty ? 'User' : clean;
+    });
+  }
+
+  Future<void> _handleLogout() async {
+    await AuthService.instance.logout();
+    // (logout already clears token+name in our AuthService; this is safe anyway)
+    await SessionManager.instance.clearToken();
+
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
   }
 
   @override
@@ -207,19 +231,29 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
             const SizedBox(height: 4),
             Text(
-              'Welcome back!',
+              'Welcome back, $_userName',
               style: AppTextStyles.greetingSubtitle,
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: AppColors.primary.withOpacity(0.2),
-          child: const Icon(
-            Icons.person,
-            color: AppColors.primary,
-            size: 20,
-          ),
+        Row(
+          children: [
+            IconButton(
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout),
+              color: AppColors.textSecondary,
+              tooltip: 'Logout',
+            ),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: AppColors.primary.withOpacity(0.2),
+              child: const Icon(
+                Icons.person,
+                color: AppColors.primary,
+                size: 20,
+              ),
+            ),
+          ],
         ),
       ],
     );
