@@ -4,6 +4,8 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/signup_screen.dart';
 import 'theme/app_colors.dart';
+import 'services/auth_service.dart';
+import 'services/session_manager.dart';
 
 void main() {
   // Set preferred orientations and system UI overlay style
@@ -26,8 +28,43 @@ void main() {
   runApp(const SmartHomeApp());
 }
 
-class SmartHomeApp extends StatelessWidget {
+class SmartHomeApp extends StatefulWidget {
   const SmartHomeApp({super.key});
+
+  @override
+  State<SmartHomeApp> createState() => _SmartHomeAppState();
+}
+
+class _SmartHomeAppState extends State<SmartHomeApp> {
+  late Future<bool> _sessionCheckFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionCheckFuture = _checkExistingSession();
+  }
+
+  Future<bool> _checkExistingSession() async {
+    final token = await SessionManager.instance.getToken();
+    if (token == null || token.isEmpty) return false;
+
+    try {
+      final user = await AuthService.instance.fetchCurrentUser();
+      final name = (user['name'] ??
+          user['data']?['name'] ??
+          user['user']?['name'] ??
+          '')
+          .toString()
+          .trim();
+
+      await SessionManager.instance.saveUserName(name.isEmpty ? 'User' : name);
+
+      return true;
+    } catch (_) {
+      await SessionManager.instance.clearToken();
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

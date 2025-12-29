@@ -4,10 +4,14 @@ import '../theme/app_text_styles.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../utils/form_validators.dart';
+import '../services/auth_service.dart';
+import '../services/session_manager.dart';
 
 /// Signup screen for the Smart Home application
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+  const SignupScreen({super.key, this.authClient});
+
+  final AuthClient? authClient;
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -16,41 +20,41 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  late final AuthClient _authClient;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
-    // Setup entrance animation
+    _authClient = widget.authClient ?? AuthService.instance;
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    // Start animation
     _animationController.forward();
   }
 
@@ -64,44 +68,70 @@ class _SignupScreenState extends State<SignupScreen>
     super.dispose();
   }
 
-  String? _validateName(String? value) {
-    return FormValidators.validateName(value);
-  }
+  String? _validateName(String? v) => FormValidators.validateName(v);
+  String? _validateEmail(String? v) => FormValidators.validateEmail(v);
+  String? _validatePassword(String? v) => FormValidators.validatePassword(v);
 
-  String? _validateEmail(String? value) {
-    return FormValidators.validateEmail(value);
-  }
+  String? _validateConfirmPassword(String? v) =>
+      FormValidators.validateConfirmPassword(v, _passwordController.text);
 
-  String? _validatePassword(String? value) {
-    return FormValidators.validatePassword(value);
-  }
+  Future<void> _handleSignUp() async {
+    // Hard guard against double tap
+    if (_isLoading) return;
 
-  String? _validateConfirmPassword(String? value) {
-    return FormValidators.validateConfirmPassword(value, _passwordController.text);
-  }
+    if (!_formKey.currentState!.validate()) return;
 
-  void _handleSignUp() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account created successfully (mock)'),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(milliseconds: 500),
-        ),
+    setState(() => _isLoading = true);
+
+    try {
+      await _authClient.register(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim().toLowerCase(),
+        password: _passwordController.text.trim(),
       );
-      debugPrint('Sign up successful (mock)');
-      
-      // Navigate to dashboard after successful sign up
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/dashboard');
-        }
-      });
+
+      final dynamic user = await _authClient.fetchCurrentUser();
+
+      String name = '';
+      if (user is Map) {
+        final data = user['data'];
+        final u = user['user'];
+
+        name = (user['name'] ??
+            (data is Map ? data['name'] : null) ??
+            (u is Map ? u['name'] : null) ??
+            '')
+            .toString()
+            .trim();
+      }
+
+      await SessionManager.instance.saveUserName(name);
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/dashboard');
+    } on AuthException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('Unable to create account. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _handleBackToLogin() {
+    if (_isLoading) return;
     Navigator.of(context).pop();
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -247,10 +277,13 @@ class _SignupScreenState extends State<SignupScreen>
                             ),
                             const SizedBox(height: 24),
 
-                            // Sign Up Button
+                            // Sign Up Button (sync callback, safe for your PrimaryButton type)
                             PrimaryButton(
-                              text: 'Sign Up',
-                              onPressed: _handleSignUp,
+                              text: _isLoading ? 'Creating...' : 'Sign Up',
+                              onPressed: () {
+                                if (_isLoading) return;
+                                _handleSignUp();
+                              },
                             ),
                           ],
                         ),
@@ -259,31 +292,29 @@ class _SignupScreenState extends State<SignupScreen>
                     const SizedBox(height: 24),
 
                     // Back to Login Link
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Already have an account? ",
-                            style: AppTextStyles.smallLink,
-                          ),
-                          TextButton(
-                            onPressed: _handleBackToLogin,
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 8,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account? ",
+                          style: AppTextStyles.smallLink,
+                        ),
+                        TextButton(
+                          onPressed: _handleBackToLogin,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 8,
                             ),
-                            child: Text(
-                              'Sign in',
-                              style: AppTextStyles.link,
-                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                        ],
-                      ),
+                          child: Text(
+                            'Sign in',
+                            style: AppTextStyles.link,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
