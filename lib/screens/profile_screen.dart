@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_home/screens/edit_profile_screen.dart';
 import 'package:smart_home/screens/settings_screen.dart';
 import 'package:smart_home/services/auth_service.dart';
 import 'package:smart_home/services/session_manager.dart';
@@ -167,8 +168,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: const Icon(Icons.edit, color: Colors.deepPurple),
                   title: const Text('Edit Profile'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    // Navigate to Edit Profile screen
+                  onTap: () async {
+                    final updatedName = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditProfileScreen(currentName: _userName),
+                      ),
+                    );
+
+                    if (updatedName != null && mounted) {
+                      setState(() => _userName = updatedName);
+                    }
                   },
                 ),
                 const Divider(height: 1),
