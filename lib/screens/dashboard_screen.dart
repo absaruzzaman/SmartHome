@@ -52,21 +52,21 @@ class _DashboardScreenState extends State<DashboardScreen>
     },
   ];
 
-  // Scene items
-  final List<SceneItem> _scenes = [
-    SceneItem(
-      title: 'Morning Routine',
-      subtitle: '4 devices active',
-      isActive: true,
-      icon: Icons.wb_sunny_rounded,
-    ),
-    SceneItem(
-      title: 'Night Mode',
-      subtitle: '6 devices configured',
-      isActive: false,
-      icon: Icons.nightlight_rounded,
-    ),
-  ];
+  // // Scene items
+  // final List<SceneItem> _scenes = [
+  //   SceneItem(
+  //     title: 'Morning Routine',
+  //     subtitle: '4 devices active',
+  //     isActive: true,
+  //     icon: Icons.wb_sunny_rounded,
+  //   ),
+  //   SceneItem(
+  //     title: 'Night Mode',
+  //     subtitle: '6 devices configured',
+  //     isActive: false,
+  //     icon: Icons.nightlight_rounded,
+  //   ),
+  // ];
 
   String _userName = 'User';
 
@@ -131,15 +131,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     });
   }
 
-  void _showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
+  // void _showSnackbar(String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(message),
+  //       behavior: SnackBarBehavior.floating,
+  //       duration: const Duration(seconds: 2),
+  //     ),
+  //   );
+  // }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -181,39 +181,51 @@ class _DashboardScreenState extends State<DashboardScreen>
                   _buildOverviewSection(),
                   const SizedBox(height: 24),
 
-                  // Quick Actions Section
-                  _buildQuickActionsSection(),
-                  const SizedBox(height: 24),
+                  // // Quick Actions Section
+                  // _buildQuickActionsSection(),
+                  // const SizedBox(height: 24),
 
                   // Favorite Devices Section
                   _buildFavoriteDevicesSection(),
                   const SizedBox(height: 24),
 
-                  // Active Scenes Section
-                  _buildActiveScenesSection(),
-                  const SizedBox(height: 80), // Space for bottom nav
+                  // // Active Scenes Section
+                  // _buildActiveScenesSection(),
+                  // const SizedBox(height: 80), // Space for bottom nav
                 ],
               ),
             ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSnackbar('Add (mock)'),
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => _showSnackbar('Add (mock)'),
+      //   backgroundColor: AppColors.primary,
+      //   child: const Icon(Icons.add, color: Colors.white),
+      // ),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
       bottomNavigationBar: AppBottomNav(
         selectedIndex: _selectedBottomTab,
+
         onTabSelected: (index) {
-          setState(() {
-            _selectedBottomTab = index;
-          });
-          final tabs = ['Home', 'Devices', 'Scenes', 'Settings'];
-          _showSnackbar('${tabs[index]} tab (mock)');
-        },
-        onFabPressed: () => _showSnackbar('Add (mock)'),
+          if (index == _selectedBottomTab) return;
+          setState(() => _selectedBottomTab = index);
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/dashboard');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/devices');
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/rooms');
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
+          }
+        }, onFabPressed: () {  },
       ),
     );
   }
@@ -341,47 +353,47 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildQuickActionsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: AppTextStyles.sectionTitle,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: QuickActionTile(
-                label: 'Add Scene',
-                icon: Icons.add_circle_outline,
-                isPrimary: true,
-                onTap: () => _showSnackbar('Add Scene (mock)'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: QuickActionTile(
-                label: 'Rooms',
-                icon: Icons.meeting_room_rounded,
-                onTap: _navigateToRooms,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: QuickActionTile(
-                label: 'Scenes',
-                icon: Icons.auto_awesome_rounded,
-                onTap: () => _showSnackbar('Scenes (mock)'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  // Widget _buildQuickActionsSection() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         'Quick Actions',
+  //         style: AppTextStyles.sectionTitle,
+  //       ),
+  //       const SizedBox(height: 12),
+  //       Row(
+  //         children: [
+  //           Expanded(
+  //             flex: 2,
+  //             child: QuickActionTile(
+  //               label: 'Add Scene',
+  //               icon: Icons.add_circle_outline,
+  //               isPrimary: true,
+  //               onTap: () => _showSnackbar('Add Scene (mock)'),
+  //             ),
+  //           ),
+  //           const SizedBox(width: 12),
+  //           Expanded(
+  //             child: QuickActionTile(
+  //               label: 'Rooms',
+  //               icon: Icons.meeting_room_rounded,
+  //               onTap: _navigateToRooms,
+  //             ),
+  //           ),
+  //           const SizedBox(width: 12),
+  //           Expanded(
+  //             child: QuickActionTile(
+  //               label: 'Scenes',
+  //               icon: Icons.auto_awesome_rounded,
+  //               onTap: () => _showSnackbar('Scenes (mock)'),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildFavoriteDevicesSection() {
     return Column(
@@ -395,7 +407,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               style: AppTextStyles.sectionTitle,
             ),
             TextButton(
-              onPressed: () => _showSnackbar('See All (mock)'),
+              onPressed: () => {},
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero,
@@ -429,42 +441,42 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildActiveScenesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Active Scenes',
-              style: AppTextStyles.sectionTitle,
-            ),
-            TextButton(
-              onPressed: () => _showSnackbar('Manage (mock)'),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                'Manage',
-                style: AppTextStyles.smallActionLink,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        ...(_scenes.map((scene) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: SceneCard(
-              scene: scene,
-              onTap: () => _showSnackbar('${scene.title} tapped (mock)'),
-            ),
-          );
-        }).toList()),
-      ],
-    );
-  }
+  // Widget _buildActiveScenesSection() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           Text(
+  //             'Active Scenes',
+  //             style: AppTextStyles.sectionTitle,
+  //           ),
+  //           TextButton(
+  //             onPressed: () => _showSnackbar('Manage (mock)'),
+  //             style: TextButton.styleFrom(
+  //               padding: const EdgeInsets.symmetric(horizontal: 8),
+  //               minimumSize: Size.zero,
+  //               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  //             ),
+  //             child: Text(
+  //               'Manage',
+  //               style: AppTextStyles.smallActionLink,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 12),
+  //       ...(_scenes.map((scene) {
+  //         return Padding(
+  //           padding: const EdgeInsets.only(bottom: 12),
+  //           child: SceneCard(
+  //             scene: scene,
+  //             onTap: () => _showSnackbar('${scene.title} tapped (mock)'),
+  //           ),
+  //         );
+  //       }).toList()),
+  //     ],
+  //   );
+  // }
 }

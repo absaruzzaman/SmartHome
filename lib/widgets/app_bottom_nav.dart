@@ -21,15 +21,14 @@ class AppBottomNav extends StatelessWidget {
       color: Colors.white,
       elevation: 8,
       child: SizedBox(
-        // Give the bar a bit more height than the default (56 px)
+        // Give the bar a bit more height than the default (56px)
         height: kBottomNavigationBarHeight + 12,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Expanded(child: _buildNavItem(Icons.home_rounded, 'Home', 0)),
             Expanded(child: _buildNavItem(Icons.devices_rounded, 'Devices', 1)),
-            const SizedBox(width: 40), // room for the floating action button
-            Expanded(child: _buildNavItem(Icons.auto_awesome_rounded, 'Scenes', 2)),
+            Expanded(child: _buildNavItem(Icons.room_rounded, 'Rooms', 2)),
             Expanded(child: _buildNavItem(Icons.settings_rounded, 'Settings', 3)),
           ],
         ),

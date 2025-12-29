@@ -7,6 +7,9 @@ class SessionManager {
   static const _kTokenKey = 'auth_token';
   static const _kUserNameKey = 'user_name';
 
+  // Keep this in sync with RoomsScreen
+  static const String _roomsKeyPrefix = 'rooms_list_v1_';
+
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kTokenKey, token);
@@ -27,8 +30,17 @@ class SessionManager {
     return prefs.getString(_kUserNameKey);
   }
 
+  /// Logs out user: clears token + username AND clears that user's rooms cache.
   Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Read username BEFORE removing it, so we can clear user-specific rooms.
+    final username = prefs.getString(_kUserNameKey);
+
+    if (username != null && username.isNotEmpty) {
+      await prefs.remove('$_roomsKeyPrefix$username');
+    }
+
     await prefs.remove(_kTokenKey);
     await prefs.remove(_kUserNameKey);
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:smart_home/screens/rooms_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/signup_screen.dart';
@@ -94,6 +95,7 @@ class _SmartHomeAppState extends State<SmartHomeApp> {
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
         '/dashboard': (context) => const DashboardScreen(),
+        '/rooms': (context) => const RoomsScreen(),
       },
     );
   }

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../services/room_storage.dart';
+import '../utils/id_gen.dart';
+import 'room_devices_screen.dart';
 
 class RoomsScreen extends StatefulWidget {
   const RoomsScreen({super.key});
@@ -9,47 +13,65 @@ class RoomsScreen extends StatefulWidget {
   State<RoomsScreen> createState() => _RoomsScreenState();
 }
 
-class _RoomsScreenState extends State<RoomsScreen>
-    with SingleTickerProviderStateMixin {
-  int _selectedBottomTab = 0; // Home selected
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+class _RoomsScreenState extends State<RoomsScreen> with SingleTickerProviderStateMixin {
+  int _selectedBottomTab = 2;
 
-  // Placeholder rooms data
-  final List<Map<String, dynamic>> _rooms = [
-    {'name': 'Living Room', 'devices': 5, 'icon': Icons.weekend_rounded, 'isOnline': true},
-    {'name': 'Master Bedroom', 'devices': 4, 'icon': Icons.bed_rounded, 'isOnline': true},
-    {'name': 'Kitchen', 'devices': 3, 'icon': Icons.restaurant_rounded, 'isOnline': true},
-    {'name': 'Bathroom', 'devices': 2, 'icon': Icons.bathtub_rounded, 'isOnline': false},
-    {'name': 'Home Office', 'devices': 6, 'icon': Icons.work_rounded, 'isOnline': true},
-    {'name': 'Garage', 'devices': 1, 'icon': Icons.garage_rounded, 'isOnline': false},
-    {'name': 'Garden', 'devices': 2, 'icon': Icons.park_rounded, 'isOnline': true},
-    {'name': 'Guest Room', 'devices': 3, 'icon': Icons.home_rounded, 'isOnline': false},
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
+
+  List<Map<String, dynamic>> _rooms = [];
+
+  final TextEditingController _roomNameCtrl = TextEditingController();
+  IconData _selectedRoomIcon = Icons.home_rounded;
+
+  final List<IconData> _roomIcons = const [
+    Icons.weekend_rounded,
+    Icons.bed_rounded,
+    Icons.restaurant_rounded,
+    Icons.bathtub_rounded,
+    Icons.work_rounded,
+    Icons.garage_rounded,
+    Icons.park_rounded,
+    Icons.home_rounded,
+    Icons.dining_rounded,
+    Icons.meeting_room_rounded,
+    Icons.lightbulb_rounded,
   ];
 
   @override
   void initState() {
     super.initState();
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
+
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
     _animationController.forward();
+    _initRooms();
   }
 
   @override
   void dispose() {
+    _roomNameCtrl.dispose();
     _animationController.dispose();
     super.dispose();
   }
 
   void _showSnackbar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -59,27 +81,331 @@ class _RoomsScreenState extends State<RoomsScreen>
     );
   }
 
+  Future<void> _initRooms() async {
+    final loaded = await RoomStorage.loadRooms();
+
+    if (loaded.isEmpty) {
+      // ✅ IMPORTANT: type is List<Map<String, dynamic>>
+      final List<Map<String, dynamic>> defaults = <Map<String, dynamic>>[
+        RoomStorage.makeRoom(
+          id: IdGen.room(),
+          name: 'Living Room',
+          icon: Icons.weekend_rounded,
+          isOnline: true,
+          devices: const [],
+        ),
+        RoomStorage.makeRoom(
+          id: IdGen.room(),
+          name: 'Master Bedroom',
+          icon: Icons.bed_rounded,
+          isOnline: true,
+          devices: const [],
+        ),
+        RoomStorage.makeRoom(
+          id: IdGen.room(),
+          name: 'Kitchen',
+          icon: Icons.restaurant_rounded,
+          isOnline: true,
+          devices: const [],
+        ),
+        RoomStorage.makeRoom(
+          id: IdGen.room(),
+          name: 'Bathroom',
+          icon: Icons.bathtub_rounded,
+          isOnline: false,
+          devices: const [],
+        ),
+      ];
+
+      await RoomStorage.saveRooms(defaults);
+
+      if (!mounted) return;
+      setState(() => _rooms = defaults);
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _rooms = loaded);
+  }
+
+  // ---------------- Add Room ----------------
+
+  void _openAddRoomDialog() {
+    _roomNameCtrl.clear();
+    _selectedRoomIcon = Icons.home_rounded;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Add New Room', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _roomNameCtrl,
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(
+                      labelText: 'Room name',
+                      hintText: 'e.g. Dining Room',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Choose icon',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: _roomIcons.map((icon) {
+                      final selected = icon == _selectedRoomIcon;
+                      return GestureDetector(
+                        onTap: () => setDialogState(() => _selectedRoomIcon = icon),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? AppColors.primary.withAlpha((0.15 * 255).round())
+                                : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: selected ? AppColors.primary : Colors.transparent,
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: selected ? AppColors.primary : Colors.grey.shade700,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    final name = _roomNameCtrl.text.trim();
+                    if (name.isEmpty) {
+                      _showSnackbar('Room name required');
+                      return;
+                    }
+
+                    final exists = _rooms.any((r) =>
+                    (r['name'] as String).toLowerCase() == name.toLowerCase());
+                    if (exists) {
+                      _showSnackbar('Room already exists');
+                      return;
+                    }
+
+                    final room = RoomStorage.makeRoom(
+                      id: IdGen.room(),
+                      name: name,
+                      icon: _selectedRoomIcon,
+                      isOnline: false,
+                      devices: const [],
+                    );
+
+                    setState(() => _rooms.add(room));
+                    await RoomStorage.saveRooms(_rooms);
+
+                    if (mounted) Navigator.pop(context);
+                    _showSnackbar('Room added');
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ---------------- Rename / Delete Room ----------------
+
+  void _openRoomMenu(int roomIndex) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.borderSoft,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.edit_rounded),
+                title: const Text('Rename Room'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _renameRoom(roomIndex);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline_rounded, color: AppColors.errorText),
+                title: Text('Delete Room', style: TextStyle(color: AppColors.errorText)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteRoom(roomIndex);
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _renameRoom(int roomIndex) async {
+    final room = _rooms[roomIndex];
+    final ctrl = TextEditingController(text: room['name'] as String);
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Rename Room'),
+        content: TextField(controller: ctrl),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+        ],
+      ),
+    );
+
+    if (ok != true) return;
+    final newName = ctrl.text.trim();
+    if (newName.isEmpty) return;
+
+    setState(() => _rooms[roomIndex]['name'] = newName);
+    await RoomStorage.renameRoom(roomIndex: roomIndex, newName: newName);
+
+    _showSnackbar('Room renamed');
+  }
+
+  Future<void> _deleteRoom(int roomIndex) async {
+    final name = _rooms[roomIndex]['name'] as String;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Room?'),
+        content: Text('Delete "$name" and all its devices?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorText),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true) return;
+
+    setState(() => _rooms.removeAt(roomIndex));
+    await RoomStorage.saveRooms(_rooms);
+
+    _showSnackbar('Room deleted');
+  }
+
+  // ---------------- Navigation ----------------
+
+  void _openRoom(int index) {
+    final room = _rooms[index];
+    final roomName = room['name'] as String;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RoomDevicesScreen(
+          roomIndex: index,
+          roomName: roomName,
+        ),
+      ),
+    ).then((_) => _initRooms()); // refresh counts after coming back
+  }
+
+  int _deviceCount(Map<String, dynamic> room) {
+    final devices = (room['devices'] as List?) ?? [];
+    return devices.length;
+  }
+
+  IconData _roomIcon(Map<String, dynamic> room) {
+    final cp = room['iconCodePoint'] as int;
+    return RoomStorage.iconFromCodePoint(cp);
+  }
+
+  bool _roomOnline(Map<String, dynamic> room) {
+    final v = room['isOnline'];
+    return v == true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
+
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSnackbar('Add (mock)'),
+        onPressed: _openAddRoomDialog,
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
       bottomNavigationBar: AppBottomNav(
         selectedIndex: _selectedBottomTab,
         onTabSelected: (index) {
-          setState(() {
-            _selectedBottomTab = index;
-          });
-          final tabs = ['Home', 'Devices', 'Scenes', 'Settings'];
-          _showSnackbar('${tabs[index]} tab (mock)');
+          if (index == _selectedBottomTab) return;
+          setState(() => _selectedBottomTab = index);
+
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/dashboard');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/devices');
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/rooms');
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/settings');
+              break;
+          }
         },
-        onFabPressed: () => _showSnackbar('Add (mock)'),
+        onFabPressed: _openAddRoomDialog,
       ),
+
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -87,7 +413,7 @@ class _RoomsScreenState extends State<RoomsScreen>
             position: _slideAnimation,
             child: Column(
               children: [
-                // App Bar
+                // Top bar
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
@@ -100,20 +426,9 @@ class _RoomsScreenState extends State<RoomsScreen>
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: AppColors.heading,
-                          size: 20,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
+                      Text(
                         'Rooms',
                         style: TextStyle(
                           fontSize: 18,
@@ -126,117 +441,81 @@ class _RoomsScreenState extends State<RoomsScreen>
                   ),
                 ),
 
-                // Rooms List
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: _rooms.isEmpty
+                      ? const Center(child: Text('No rooms yet. Add one.'))
+                      : ListView.builder(
                     padding: const EdgeInsets.all(16).copyWith(bottom: 120),
-                    child: Column(
-                      children: [
-                        ..._rooms.map((room) {
-                          return GestureDetector(
-                            onTap: () => _showSnackbar('${room['name']} tapped (mock)'),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.shadow,
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withAlpha((0.1 * 255).round()),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      room['icon'],
-                                      color: AppColors.primary,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          room['name'],
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${room['devices']} device${room['devices'] > 1 ? 's' : ''}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Online/offline dot
-                                  Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      color: room['isOnline'] ? Colors.green : Colors.grey,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
+                    itemCount: _rooms.length,
+                    itemBuilder: (context, i) {
+                      final room = _rooms[i];
+                      final name = room['name'] as String;
+                      final icon = _roomIcon(room);
+                      final devices = _deviceCount(room);
+                      final online = _roomOnline(room);
 
-                        // Add New Room dashed button
-                        GestureDetector(
-                          onTap: () => _showSnackbar('Add New Room (mock)'),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 12),
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: AppColors.primary,
-                                style: BorderStyle.solid,
-                                width: 1.5,
+                      return GestureDetector(
+                        onTap: () => _openRoom(i),
+                        onLongPress: () => _openRoomMenu(i),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.shadow,
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.transparent,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.add, color: AppColors.primary),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Add New Room',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha((0.1 * 255).round()),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ],
-                            ),
+                                child: Icon(icon, color: AppColors.primary, size: 24),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '$devices device${devices == 1 ? '' : 's'}',
+                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: online ? Colors.green : Colors.grey,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               ],
